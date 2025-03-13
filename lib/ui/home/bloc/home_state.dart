@@ -4,7 +4,8 @@ import '../../../domain/model/home/Real_estate_ourReco_model.dart';
 import '../../../domain/model/home/details.dart';
 import '../../../domain/model/home/proparty_model.dart';
 
-enum HomeStatus { initial, loading, loaded, error,apiSuccess }
+enum HomeStatus { initial, loading, loaded, error,allDataLoaded,
+  apiSuccessFeatured,SearchSuccsess,apiSuccessRandom,apiSuccessDetails,apiSuccessCategoryDeatils }
 
 class HomeState extends BaseState {
   final HomeStatus status;

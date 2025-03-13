@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jre_app/data/lib/base/app_config.dart';
 import 'package:jre_app/domain/repositry/home/repositry_random.dart';
 import 'package:jre_app/not_fond_screen.dart' show NotFoundScreen;
+import 'package:jre_app/ui/home/widget/Search_page.dart';
 
 import '../ui/home/bloc/home_bloc.dart';
 import '../ui/home/bottombar_screen.dart';
@@ -11,6 +12,8 @@ import '../ui/language/ui/language_page.dart';
 import '../ui/splash/ui/splash_screen.dart';
 import 'app_route_name.dart';
 final appConfig = AppConfig();
+final repository = RealEstateRepository(appConfig: appConfig);
+
 class AppRouter {
   Route onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -24,7 +27,7 @@ class AppRouter {
         return MaterialPageRoute(
           builder:
               (_) => BlocProvider<HomeBloc>(
-                create: (context) => HomeBloc(appConfig as RealEstateRepositoryType),
+                create: (context) => HomeBloc(repository),
                 child: const BottoBarScreen(),
               ),
         );
@@ -32,8 +35,16 @@ class AppRouter {
         return MaterialPageRoute(
           builder:
               (_) => BlocProvider<HomeBloc>(
-                create: (context) => HomeBloc(AppConfig as RealEstateRepositoryType),
+                create: (context) => HomeBloc(repository),
                 child: const HomeScreen(),
+              ),
+        );
+        case AppRoutes.SEARCH:
+        return MaterialPageRoute(
+          builder:
+              (_) => BlocProvider<HomeBloc>(
+                create: (context) => HomeBloc(repository),
+                child:  SearchPage()
               ),
         );
       //

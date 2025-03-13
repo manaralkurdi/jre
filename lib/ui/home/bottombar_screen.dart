@@ -30,12 +30,14 @@ class _BottoBarScreenState extends State<BottoBarScreen>
 
   // List of screens for each tab
   late List<Widget> myChilders;
+
   @override
   void initState() {
     super.initState();
-
+    final appConfig = AppConfig();
+    final repository = RealEstateRepository(appConfig: appConfig);
     // Initialize the HomeBloc
-    homeBloc = HomeBloc(AppConfig as RealEstateRepositoryType);
+    homeBloc = HomeBloc(repository);
 
     // Initialize screens with appropriate BLoC providers
     myChilders = [

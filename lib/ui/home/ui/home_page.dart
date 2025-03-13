@@ -4,10 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:jre_app/base/component/app_custom_text.dart';
-import 'package:jre_app/domain/model/home/details.dart';
-import 'package:jre_app/ui/Details/bloc/property_bloc.dart';
-import 'package:jre_app/ui/home/widget/category_seeall.dart';
 import 'package:jre_app/data/lib/base/app_config.dart';
+import 'package:jre_app/ui/home/widget/category_seeall.dart';
 
 import '../../../domain/model/home/Real_estate_ourReco_model.dart';
 import '../../../domain/model/home/proparty_model.dart';
@@ -22,6 +20,7 @@ import '../bloc/home_state.dart';
 import '../component/dynamic_property.dart' show DynamicPropertyCard;
 import '../component/search_component.dart';
 import '../widget/department.dart';
+import '../widget/filter_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -41,13 +40,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSearchBottomSheet() {
+    final appConfig = AppConfig();
+    final repository = RealEstateRepository(appConfig: appConfig);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
       ),
-      builder: (context) => SearchBottomSheet(),
+      builder: (context) =>
+          BlocProvider<HomeBloc>(
+            create: (context) => HomeBloc(repository),
+            child:  SearchBottomSheet(),
+          ),
     );
   }
 
@@ -59,7 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
     "assets/images/images/bath.svg",
     "assets/images/images/sqft.svg",
   ];
-  String selectedFilter = 'All';
+  String selectedFilter = 'Apartment';
+  PropertyDataCategory? selectedFilterData;
 
   //
   // List<Property> property =
@@ -343,10 +349,47 @@ class _HomeScreenState extends State<HomeScreen> {
   //   }
   // }
 
-  void _onFilterSelected(String filter) {
+  void _onFilterSelected(String filterName, Map<String, dynamic> filterData) {
     setState(() {
-      selectedFilter = filter;
+      selectedFilter = filterName;
+      // Use the filter data directly from the callback
+      _navigateToFilteredPage(filterData);
     });
+  }
+
+  void _navigateToFilteredPage(Map<String, dynamic> filterData) {
+    final state = context.read<HomeBloc>().state;
+    final appConfig = AppConfig();
+    final repository = RealEstateRepository(appConfig: appConfig);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider<HomeBloc>(
+          create: (context) => HomeBloc(repository),
+          child: CategoryList(
+            filterName: filterData['name'],
+            filterType: filterData['id'],
+            properties: state.categoryProperties,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToDetails(String id) {
+    final appConfig = AppConfig();
+    final repository = RealEstateRepository(appConfig: appConfig);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider<HomeBloc>(
+          create: (context) => HomeBloc(repository),
+          child: PropertyViewScreen(propertyId: int.parse(id)),
+        ),
+      ),
+    );
   }
 
   @override
@@ -528,10 +571,13 @@ class _HomeScreenState extends State<HomeScreen> {
             //     context.read<HomeBloc>().add(FilterPropertiesEvent(filter));
             //   },
             // ),
-            PropertyFilter(
-              response: state.categoryProperties,
-              selectedFilter: selectedFilter,
-              onFilterSelected: _onFilterSelected,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: PropertyFilter(
+                response: state.categoryProperties,
+                selectedFilter: selectedFilter,
+                onFilterSelected: _onFilterSelected,
+              ),
             ),
           ),
           CategoryAndSeeAllWidget(name: "Featured".tr, buttonName: ""),
@@ -596,8 +642,7 @@ class _HomeScreenState extends State<HomeScreen> {
       height: 320.h,
       width: 600.w,
       child:
-          properties!.isNotEmpty
-              ? ListView.builder(
+           ListView.builder(
                 itemCount: properties.length,
                 scrollDirection: Axis.horizontal,
                 shrinkWrap: true,
@@ -639,12 +684,62 @@ class _HomeScreenState extends State<HomeScreen> {
                             SizedBox(
                               height: 320.h,
                               width: 240,
-                              child: Image.network(
-                                properties[index1].mainImage ?? "",
-                                fit: BoxFit.fill,
-                                height: 320,
-                                width: 240,
-                              ),
+                                child: FutureBuilder<String>(
+                                  future: AppConfig().imageUrl,
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.done &&
+                                        snapshot.hasData) {
+                                      return Image.network(
+                                        "${snapshot.data}${properties[index1]
+                                            .mainImage}",
+                                        fit: BoxFit.fill,
+                                        height: 320,
+                                        width: 240,
+                                        loadingBuilder: (context, child,
+                                            loadingProgress) {
+                                          if (loadingProgress == null)
+                                            return child;
+                                          return Container(
+                                            height: 320,
+                                            width: 240,
+                                            color: Colors.grey[200],
+                                            child: Center(
+                                              child: CircularProgressIndicator(
+                                                value: loadingProgress
+                                                    .expectedTotalBytes != null
+                                                    ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                                    : null,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        errorBuilder: (context, error,
+                                            stackTrace) {
+                                          return Container(
+                                            height: 320,
+                                            width: 240,
+                                            color: Colors.grey[200],
+                                            child: Icon(
+                                                Icons.broken_image, size: 50,
+                                                color: Colors.grey[400]),
+                                          );
+                                        },
+                                      );
+                                    } else {
+                                      return Container(
+                                        height: 320,
+                                        width: 240,
+                                        color: Colors.grey[200],
+                                        child: Center(
+                                            child: CircularProgressIndicator()),
+                                      );
+                                    }
+                                  },
+                                )
                             ),
                             Container(
                               decoration: BoxDecoration(
@@ -702,8 +797,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             Positioned(
                               bottom: 10,
                               child: SizedBox(
-                                height: 130,
-                                width: 240,
+                                height: 136.h,
+                                width: 240.w,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -714,7 +809,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         top: 10,
                                       ),
                                       child: Text(
-                                        properties![index1]?.name ?? "",
+                                        properties![index1]?.nameEn ?? "",
                                         maxLines: 1,
                                         style: const TextStyle(
                                           fontSize: 17,
@@ -861,7 +956,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Column(
                   children: [
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.10),
+
                     const Image(
                       image: AssetImage(
                         "assets/images/images/searchDataEmpty.png",
@@ -902,19 +997,6 @@ class _HomeScreenState extends State<HomeScreen> {
     // );
   }
 
-  _navigateToDetails(id) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => BlocProvider<HomeBloc>(
-              create: (context) => HomeBloc(AppConfig as RealEstateRepositoryType),
-              child: PropertyViewScreen(propertyId: id ?? "1"),
-            ),
-      ),
-    );
-  }
-
   Widget _buildRecommendationList(properties) {
     return ListView.builder(
       primary: true,
@@ -933,7 +1015,13 @@ class _HomeScreenState extends State<HomeScreen> {
           bedsExtractor: (p) => 3,
           bathsExtractor: (p) => 3,
           kitchensExtractor: (p) => 2,
-          imageUrlExtractor: (p) => p.mainImage,
+          imageUrlExtractor: (p) async {
+            final appConfig = AppConfig();
+            final baseUrl = await appConfig.imageUrl;
+            return p.mainImage != null
+                ? '$baseUrl${p.mainImage}'
+                : '$baseUrl/default.jpg';
+          },
           //isFavoriteExtractor: (p) => p.isFavorite,
           propertyTypeExtractor: (p) => p.propertyType,
           // onFavoriteToggle: _toggleFavorite,

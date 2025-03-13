@@ -6,6 +6,8 @@ class AppRoutes {
   static const String HOME = '/home';
   static const String CHANGE_LANGUAGE = '/language';
   static const String BottoBarScreen = '/BottoBarScreen';
+  static const String SEARCH = '/SEARCH';
+  static const String categoryList = '/categoryList';
 
   // Authentication routes
   static const String LOGIN = '/login';

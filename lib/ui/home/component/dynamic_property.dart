@@ -28,7 +28,7 @@ class DynamicPropertyCard<T> extends StatelessWidget {
   final int Function(T property) kitchensExtractor;
 
   /// Callback to extract the image URL from the property
-  final String Function(T property) imageUrlExtractor;
+  final Future<String> Function(T property) imageUrlExtractor;
 
   /// Optional callback for handling favorite toggle
   final Function(T property, bool isFavorite)? onFavoriteToggle;
@@ -87,22 +87,37 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                 children: [
                   // Image
                   ClipRRect(
-                    borderRadius:  BorderRadius.circular(30
-                    ),
-                    child: Image.network(
-
-                      imageUrlExtractor(property),
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 200,
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: Icon(Icons.error, color: Colors.grey),
-                          ),
-                        );
+                    borderRadius: BorderRadius.circular(30),
+                    child: FutureBuilder<String>(
+                      future: imageUrlExtractor(property),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done &&
+                            snapshot.hasData) {
+                          return Image.network(
+                            snapshot.data!,
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 200,
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Icon(Icons.error, color: Colors.grey),
+                                ),
+                              );
+                            },
+                          );
+                        } else {
+                          // Loading state
+                          return Container(
+                            height: 200,
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
                       },
                     ),
                   ),

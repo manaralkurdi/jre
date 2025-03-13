@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:jre_app/utils/Colors.dart';
 
 import '../../../base/component/app_custom_text.dart';
 import '../../../base/component/button_custome.dart';
@@ -18,23 +19,6 @@ class LanguageScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.grey[100],
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12.0),
-          child: AppCustomText(
-            titleText: appLocalizations.translate('language'),
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        actions: [],
-      ),
       body: BlocBuilder<LanguageBloc, LanguageState>(
         builder: (context, state) {
           if (state.status == LanguageStatus.initial) {
@@ -46,6 +30,7 @@ class LanguageScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 26.0, horizontal: 12),
             child: Column(
               children: [
+                30.verticalSpace,
                 AppCustomText(
                   titleText: appLocalizations.translate('CHOOSE_LANG'),
                   style: const TextStyle(
@@ -54,7 +39,7 @@ class LanguageScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                5.verticalSpace,
+                12.verticalSpace,
                 AppCustomText(
                   titleText: appLocalizations.translate('DESC_LANG'),
                   style: const TextStyle(
@@ -64,7 +49,7 @@ class LanguageScreen extends StatelessWidget {
                   ),
                 ),
                 30.verticalSpace,
-                Image.asset("assets/images/lang.png", height: 200,fit: BoxFit.contain,),
+                Image.asset("assets/images/lang.png", height: 300,fit: BoxFit.contain,),
                 30.verticalSpace,
                 Expanded(
                   // Added Expanded widget to give ListView a defined height
@@ -138,7 +123,7 @@ class LanguageScreen extends StatelessWidget {
                     );
                     Navigator.pushNamed(context, AppRoutes.BottoBarScreen);
                   },
-                  textButton: 'SAVE',
+                  textButton: 'SAVE',backgroundColor: primaryColor,
                 ),
               ],
             ),

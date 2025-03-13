@@ -44,7 +44,7 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
       emit.call(state.copyWith(
           status: HomeStatus.error, errorMessage: error.message));
     }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccess,recommendedProperties: data.data));
+      emit.call(state.copyWith(status: HomeStatus.apiSuccessRandom,recommendedProperties: data.data));
     });
   }
 
@@ -58,7 +58,7 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
       emit.call(state.copyWith(
           status: HomeStatus.error, errorMessage: error.message));
     }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccess,categoryProperties: data.data));
+      emit.call(state.copyWith(status: HomeStatus.apiSuccessCategoryDeatils,categoryProperties: data.data));
     });
   }
   Future<void> _onFetchFeaturedList(FeaturedLoaded event,
@@ -70,7 +70,7 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
       emit.call(state.copyWith(
           status: HomeStatus.error, errorMessage: error.message));
     }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccess,featuredProperties: data.data));
+      emit.call(state.copyWith(status: HomeStatus.apiSuccessFeatured,featuredProperties: data.data));
     });
   }
 
@@ -83,7 +83,7 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
       emit.call(state.copyWith(
           status: HomeStatus.error, errorMessage: error.message));
     }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccess,
+      emit.call(state.copyWith(status: HomeStatus.apiSuccessDetails,
           detailsProperties: data));
     });
   }
@@ -106,7 +106,7 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
       emit.call(state.copyWith(
           status: HomeStatus.error, errorMessage: error.message));
     }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccess,filteredProperties: data.data));
+      emit.call(state.copyWith(status: HomeStatus.SearchSuccsess,filteredProperties: data.data));
     });
   }
 }
