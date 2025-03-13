@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:jre_app/base/component/app_custom_text.dart';
 
 import 'package:jre_app/ui/home/widget/filter_page.dart';
+import '../../../domain/model/home/proparty_model.dart';
 import '../../../utils/Colors.dart';
 import 'filter_page.dart';
 
@@ -10,22 +10,24 @@ import 'filter_page.dart';
 class PropertyFilter extends StatelessWidget {
   final String selectedFilter;
   final Function(String) onFilterSelected;
+  final List<PropertyDataCategory> response;
 
   const PropertyFilter({
     Key? key,
     required this.selectedFilter,
     required this.onFilterSelected,
+    required this.response,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> filters = [
-     // {'name': 'All', 'icon': Icons.grid_view_rounded},
-      {'name': 'Apartment', 'icon': Icons.apartment},
-      {'name': 'Villa', 'icon': Icons.villa},
-      {'name': 'House', 'icon': Icons.home},
-      {'name': 'Farm', 'icon': Icons.agriculture},
-      {'name': 'Chalet', 'icon': Icons.cottage},
+      // {'name': 'All', 'icon': Icons.grid_view_rounded,'id':1},
+      {'name': 'Apartment', 'icon': Icons.apartment,'id':5},
+      {'name': 'Villa', 'icon': Icons.villa,'id':4},
+      {'name': 'House', 'icon': Icons.home,'id':1},
+      {'name': 'Farm', 'icon': Icons.villa,'id':3},
+      {'name': 'Chaleh', 'icon': Icons.home,'id':1},
     ];
 
     return SizedBox(
@@ -40,12 +42,14 @@ class PropertyFilter extends StatelessWidget {
           return GestureDetector(
             onTap: () {
               onFilterSelected(filter['name']);
+              // Navigate to filtered results page if not "All"
               if (filter['name'] != 'All') {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => FilteredPropertiesPage(
-                      filterType: filter['name'],
+                      filterType: filter['id'],
+                      response: response,
                     ),
                   ),
                 );
@@ -68,7 +72,7 @@ class PropertyFilter extends StatelessWidget {
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  AppCustomText(titleText:
+                  Text(
                     filter['name'],
                     style: TextStyle(
                       color: isSelected ? Colors.white : primaryColor,

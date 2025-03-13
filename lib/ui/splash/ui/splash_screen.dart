@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:jre_app/theme/bloc/theme_bloc/theme_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:jre_app/ui/language/ui/language_page.dart';
 
 import '../../../not_fond_screen.dart';
 
@@ -44,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     // Main animation controller for logo
     _mainController = AnimationController(
-      duration: const Duration(seconds: 6),
+      duration: const Duration(seconds: 4),
       vsync: this,
     );
 
@@ -86,13 +85,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     // Start the animation
     _mainController.forward();
-    Future.delayed(const Duration(seconds: 6), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LanguageScreen()),
-        );
-      }
-    });
+    // Future.delayed(const Duration(seconds: 3), () {
+    //   if (mounted) {
+    //     Navigator.of(context).pushReplacement(
+    //       MaterialPageRoute(builder: (context) => const NotFoundScreen()),
+    //     );
+    //   }
+    // });
   }
 
   void _generateHouses() {

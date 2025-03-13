@@ -59,6 +59,8 @@ dependencies:
   get:
   fluttertoast: ^8.1.2
   auto_size_text:
+  dartz:
+  either_dart:
   shimmer:
   get_storage:
   provider:

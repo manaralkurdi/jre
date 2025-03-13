@@ -7,7 +7,6 @@ import 'package:jre_app/base/component/app_custom_text.dart';
 import 'package:jre_app/ui/Details/bloc/property_bloc.dart';
 import 'package:jre_app/ui/home/widget/category_seeall.dart';
 
-import '../../../model/home/proparty_model.dart';
 import '../../../theme/bloc/theme_bloc/theme_bloc.dart';
 import '../../../utils/Colors.dart';
 import '../../../utils/fontfamily_model.dart';
@@ -16,7 +15,6 @@ import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../component/dynamic_property.dart' show DynamicPropertyCard;
-import '../component/search_component.dart';
 import '../widget/department.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -55,287 +53,289 @@ class _HomeScreenState extends State<HomeScreen> {
     "assets/images/images/bath.svg",
     "assets/images/images/sqft.svg",
   ];
-
-  List<Property> property =
-  // Mock data - in a real app, this would come from local storage
-  [
-    Property(
-      rating: 5,
-      id: '1',
-      title: 'Modern Apartment',
-      price: 267000,
-      location: 'New York, NY',
-      locationCode: '2BW',
-      beds: 4,
-      baths: 3,
-      kitchens: 1,
-      imageUrl: 'assets/images/OIP.jpeg',
-      type: 'Apartment',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-    ),
-    Property(
-      id: '2',
-      title: 'Luxury Villa',
-      price: 550000,
-      location: 'Miami, FL',
-      locationCode: '3CV',
-      beds: 5,
-      baths: 4,
-      kitchens: 2,
-      imageUrl: 'assets/images/OIP.jpeg',
-      type: 'Villa',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-    Property(
-      id: '3',
-      title: 'Family House',
-      price: 320000,
-      location: 'Austin, TX',
-      locationCode: '4FH',
-      beds: 4,
-      baths: 2,
-      kitchens: 1,
-      imageUrl: 'assets/images/OIP.jpeg',
-      type: 'House',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-    Property(
-      id: '4',
-      title: 'Modern Villa',
-      price: 620000,
-      location: 'Los Angeles, CA',
-      locationCode: '5MV',
-      beds: 6,
-      baths: 5,
-      kitchens: 2,
-      imageUrl: 'assets/images/OIP.jpeg',
-      type: 'Villa',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-    Property(
-      id: '5',
-      title: 'Studio Apartment',
-      price: 175000,
-      location: 'Chicago, IL',
-      locationCode: '1SA',
-      beds: 1,
-      baths: 1,
-      kitchens: 1,
-      imageUrl: 'assets/images/OIP.jpeg',
-      type: 'Apartment',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-    Property(
-      id: '6',
-      title: 'Countryside House',
-      price: 290000,
-      location: 'Boulder, CO',
-      locationCode: '6CH',
-      beds: 3,
-      baths: 2,
-      kitchens: 1,
-      imageUrl: 'assets/images/OIP.jpeg',
-      type: 'House',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-  ];
-  List<PropertyModel> propertyCard =
-  // Mock data - in a real app, this would come from local storage
-  [
-    PropertyModel(
-      id: '1',
-      title: 'Delux Apartment',
-      price: 267000,
-      location: 'NY, New York',
-      locationCode: '2BW',
-      beds: 4,
-      baths: 3,
-      kitchens: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2',
-      isFavorite: false,
-      propertyType: 'For Sale',
-    ),
-    PropertyModel(
-      id: '2',
-      title: 'Modern Penthouse',
-      price: 450000,
-      location: 'LA, California',
-      locationCode: '3AC',
-      beds: 5,
-      baths: 4,
-      kitchens: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-      isFavorite: true,
-      propertyType: 'Premium',
-    ),
-    PropertyModel(
-      id: '3',
-      title: 'Cozy Studio',
-      price: 120000,
-      location: 'Chicago, Illinois',
-      locationCode: '1CS',
-      beds: 1,
-      baths: 1,
-      kitchens: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1554995207-c18c203602cb',
-      isFavorite: false,
-      propertyType: 'For Rent',
-    ),
-    PropertyModel(
-      id: '4',
-      title: 'Seaside Villa',
-      price: 870000,
-      location: 'Miami, Florida',
-      locationCode: '5SV',
-      beds: 6,
-      baths: 5,
-      kitchens: 2,
-      imageUrl: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914',
-      isFavorite: false,
-      propertyType: 'Luxury',
-    ),
-    PropertyModel(
-      id: '5',
-      title: 'Family Home',
-      price: 320000,
-      location: 'Boston, Massachusetts',
-      locationCode: '4FH',
-      beds: 4,
-      baths: 3,
-      kitchens: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6',
-      isFavorite: true,
-      propertyType: 'For Sale',
-    ),
-  ];
   String selectedFilter = 'All';
 
-  // Sample property data
-  final List<Property> allProperties = [
-    Property(
-      rating: 5,
-      id: '1',
-      title: 'Modern Apartment',
-      price: 267000,
-      location: 'New York, NY',
-      locationCode: '2BW',
-      beds: 4,
-      baths: 3,
-      kitchens: 1,
-      imageUrl: 'assets/images/apartment1.jpg',
-      type: 'Apartment',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-    ),
-    Property(
-      id: '2',
-      title: 'Luxury Villa',
-      price: 550000,
-      location: 'Miami, FL',
-      locationCode: '3CV',
-      beds: 5,
-      baths: 4,
-      kitchens: 2,
-      imageUrl: 'assets/images/villa1.jpg',
-      type: 'Villa',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-    Property(
-      id: '3',
-      title: 'Family House',
-      price: 320000,
-      location: 'Austin, TX',
-      locationCode: '4FH',
-      beds: 4,
-      baths: 2,
-      kitchens: 1,
-      imageUrl: 'assets/images/house1.jpg',
-      type: 'House',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-    Property(
-      id: '4',
-      title: 'Modern Villa',
-      price: 620000,
-      location: 'Los Angeles, CA',
-      locationCode: '5MV',
-      beds: 6,
-      baths: 5,
-      kitchens: 2,
-      imageUrl: 'assets/images/villa2.jpg',
-      type: 'Villa',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-    Property(
-      id: '5',
-      title: 'Studio Apartment',
-      price: 175000,
-      location: 'Chicago, IL',
-      locationCode: '1SA',
-      beds: 1,
-      baths: 1,
-      kitchens: 1,
-      imageUrl: 'assets/images/apartment2.jpg',
-      type: 'Apartment',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-    Property(
-      id: '6',
-      title: 'Countryside House',
-      price: 290000,
-      location: 'Boulder, CO',
-      locationCode: '6CH',
-      beds: 3,
-      baths: 2,
-      kitchens: 1,
-      imageUrl: 'assets/images/house2.jpg',
-      type: 'House',
-      name: 'Khaothong Terrace 1',
-      country: 'Krabi Thailand',
-      sqft: 6575,
-      rating: 5,
-    ),
-  ];
-
-  List<Property> get filteredProperties {
-    if (selectedFilter == 'All') {
-      return allProperties;
-    } else {
-      return allProperties
-          .where((property) => property.type == selectedFilter)
-          .toList();
-    }
-  }
+  //
+  // List<Property> property =
+  // // Mock data - in a real app, this would come from local storage
+  // [
+  //   Property(
+  //     rating: 5,
+  //     id: '1',
+  //     title: 'Modern
+  //     ',
+  //     price: 267000,
+  //     location: 'New York, NY',
+  //     locationCode: '2BW',
+  //     beds: 4,
+  //     baths: 3,
+  //     kitchens: 1,
+  //     imageUrl: 'assets/images/OIP.jpeg',
+  //     type: 'Apartment',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //   ),
+  //   Property(
+  //     id: '2',
+  //     title: 'Luxury Villa',
+  //     price: 550000,
+  //     location: 'Miami, FL',
+  //     locationCode: '3CV',
+  //     beds: 5,
+  //     baths: 4,
+  //     kitchens: 2,
+  //     imageUrl: 'assets/images/OIP.jpeg',
+  //     type: 'Villa',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //
+  //   ),
+  //   Property(
+  //     id: '3',
+  //     title: 'Family House',
+  //     price: 320000,
+  //     location: 'Austin, TX',
+  //     locationCode: '4FH',
+  //     beds: 4,
+  //     baths: 2,
+  //     kitchens: 1,
+  //     imageUrl: 'assets/images/OIP.jpeg',
+  //     type: 'House',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //   ),
+  //   Property(
+  //     id: '4',
+  //     title: 'Modern Villa',
+  //     price: 620000,
+  //     location: 'Los Angeles, CA',
+  //     locationCode: '5MV',
+  //     beds: 6,
+  //     baths: 5,
+  //     kitchens: 2,
+  //     imageUrl: 'assets/images/OIP.jpeg',
+  //     type: 'Villa',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //   ),
+  //   Property(
+  //     id: '5',
+  //     title: 'Studio Apartment',
+  //     price: 175000,
+  //     location: 'Chicago, IL',
+  //     locationCode: '1SA',
+  //     beds: 1,
+  //     baths: 1,
+  //     kitchens: 1,
+  //     imageUrl: 'assets/images/OIP.jpeg',
+  //     type: 'Apartment',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //   ),
+  //   Property(
+  //     id: '6',
+  //     title: 'Countryside House',
+  //     price: 290000,
+  //     location: 'Boulder, CO',
+  //     locationCode: '6CH',
+  //     beds: 3,
+  //     baths: 2,
+  //     kitchens: 1,
+  //     imageUrl: 'assets/images/OIP.jpeg',
+  //     type: 'House',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //   ),
+  // ];
+  // List<PropertyModel> propertyCard =
+  // // Mock data - in a real app, this would come from local storage
+  // [
+  //   PropertyModel(
+  //     id: '1',
+  //     title: 'Delux Apartment',
+  //     price: 267000,
+  //     location: 'NY, New York',
+  //     locationCode: '2BW',
+  //     beds: 4,
+  //     baths: 3,
+  //     kitchens: 1,
+  //     imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2',
+  //     isFavorite: false,
+  //     propertyType: 'For Sale',
+  //   ),
+  //   PropertyModel(
+  //     id: '2',
+  //     title: 'Modern Penthouse',
+  //     price: 450000,
+  //     location: 'LA, California',
+  //     locationCode: '3AC',
+  //     beds: 5,
+  //     baths: 4,
+  //     kitchens: 1,
+  //     imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+  //     isFavorite: true,
+  //     propertyType: 'Premium',
+  //   ),
+  //   PropertyModel(
+  //     id: '3',
+  //     title: 'Cozy Studio',
+  //     price: 120000,
+  //     location: 'Chicago, Illinois',
+  //     locationCode: '1CS',
+  //     beds: 1,
+  //     baths: 1,
+  //     kitchens: 1,
+  //     imageUrl: 'https://images.unsplash.com/photo-1554995207-c18c203602cb',
+  //     isFavorite: false,
+  //     propertyType: 'For Rent',
+  //   ),
+  //   PropertyModel(
+  //     id: '4',
+  //     title: 'Seaside Villa',
+  //     price: 870000,
+  //     location: 'Miami, Florida',
+  //     locationCode: '5SV',
+  //     beds: 6,
+  //     baths: 5,
+  //     kitchens: 2,
+  //     imageUrl: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914',
+  //     isFavorite: false,
+  //     propertyType: 'Luxury',
+  //   ),
+  //   PropertyModel(
+  //     id: '5',
+  //     title: 'Family Home',
+  //     price: 320000,
+  //     location: 'Boston, Massachusetts',
+  //     locationCode: '4FH',
+  //     beds: 4,
+  //     baths: 3,
+  //     kitchens: 1,
+  //     imageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6',
+  //     isFavorite: true,
+  //     propertyType: 'For Sale',
+  //   ),
+  // ];
+  //
+  // // Sample property data
+  // final List<Property> allProperties = [
+  //   Property(
+  //     rating: 5,
+  //     id: '1',
+  //     title: 'Modern Apartment',
+  //     price: 267000,
+  //     location: 'New York, NY',
+  //     locationCode: '2BW',
+  //     beds: 4,
+  //     baths: 3,
+  //     kitchens: 1,
+  //     imageUrl: 'assets/images/apartment1.jpg',
+  //     type: 'Apartment',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //   ),
+  //   Property(
+  //     id: '2',
+  //     title: 'Luxury Villa',
+  //     price: 550000,
+  //     location: 'Miami, FL',
+  //     locationCode: '3CV',
+  //     beds: 5,
+  //     baths: 4,
+  //     kitchens: 2,
+  //     imageUrl: 'assets/images/villa1.jpg',
+  //     type: 'Villa',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //
+  //   ),
+  //   Property(
+  //     id: '3',
+  //     title: 'Family House',
+  //     price: 320000,
+  //     location: 'Austin, TX',
+  //     locationCode: '4FH',
+  //     beds: 4,
+  //     baths: 2,
+  //     kitchens: 1,
+  //     imageUrl: 'assets/images/house1.jpg',
+  //     type: 'House',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //   ),
+  //   Property(
+  //     id: '4',
+  //     title: 'Modern Villa',
+  //     price: 620000,
+  //     location: 'Los Angeles, CA',
+  //     locationCode: '5MV',
+  //     beds: 6,
+  //     baths: 5,
+  //     kitchens: 2,
+  //     imageUrl: 'assets/images/villa2.jpg',
+  //     type: 'Villa',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //   ),
+  //   Property(
+  //     id: '5',
+  //     title: 'Studio Apartment',
+  //     price: 175000,
+  //     location: 'Chicago, IL',
+  //     locationCode: '1SA',
+  //     beds: 1,
+  //     baths: 1,
+  //     kitchens: 1,
+  //     imageUrl: 'assets/images/apartment2.jpg',
+  //     type: 'Apartment',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //   ),
+  //   Property(
+  //     id: '6',
+  //     title: 'Countryside House',
+  //     price: 290000,
+  //     location: 'Boulder, CO',
+  //     locationCode: '6CH',
+  //     beds: 3,
+  //     baths: 2,
+  //     kitchens: 1,
+  //     imageUrl: 'assets/images/house2.jpg',
+  //     type: 'House',
+  //     name: 'Khaothong Terrace 1',
+  //     country: 'Krabi Thailand',
+  //     sqft: 6575,
+  //     rating: 5,
+  //   ),
+  // ];
+  //
+  // List<Property> get filteredProperties {
+  //   if (selectedFilter == 'All') {
+  //     return allProperties;
+  //   } else {
+  //     return allProperties.where((property) => property.type == selectedFilter).toList();
+  //   }
+  // }
 
   void _onFilterSelected(String filter) {
     setState(() {
@@ -343,14 +343,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // void _navigateToPropertyDetail(Property property) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (context) => PropertyDetailPage(property: property),
-  //     ),
-  //   );
-  // }
+  void _navigateToPropertyDetail(Property property) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PropertyDetailPage(property: property),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -385,7 +385,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Container(
                   height: 50,
                   width: 50,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     image: DecorationImage(
                       image: AssetImage(
@@ -396,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -531,6 +531,7 @@ class _HomeScreenState extends State<HomeScreen> {
             //   },
             // ),
             PropertyFilter(
+              response: state.categoryProperties,
               selectedFilter: selectedFilter,
               onFilterSelected: _onFilterSelected,
             ),
@@ -638,9 +639,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Stack(
                           children: [
                             SizedBox(
+                              height: 320.h,
                               width: 240,
-                              child: Image.asset(
-                                properties[index1].imageUrl ?? "",
+                              child: Image.network(
+                                properties[index1].mainImage ?? "",
                                 fit: BoxFit.fill,
                                 height: 320,
                                 width: 240,
@@ -660,88 +662,66 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
-                            properties?[index1]?.rating != "1"
-                                ? Positioned(
-                                  top: 15,
-                                  right: 20,
-                                  child: Container(
-                                    height: 30,
-                                    width: 65,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFedeeef),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          margin: const EdgeInsets.fromLTRB(
-                                            0,
-                                            0,
-                                            3,
-                                            0,
-                                          ),
-                                          child: Image.asset(
-                                            "assets/images/images/Rating.png",
-                                            height: 15,
-                                            width: 15,
-                                          ),
-                                        ),
-                                        AppCustomText(
-                                          titleText:
-                                              "${properties![index1].rating.toInt() ?? ""}",
-                                          style: const TextStyle(
-                                            fontFamily: FontFamily.gilroyMedium,
-                                            color: Colors.blue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                                : Positioned(
-                                  top: 15,
-                                  right: 20,
-                                  child: Container(
-                                    height: 30,
-                                    width: 60,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFedeeef),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    child: Text(
-                                      "BUY".tr,
-                                      style: const TextStyle(
-                                        color: Colors.blue,
-                                        fontWeight: FontWeight.w600,
+                            Positioned(
+                              top: 15,
+                              right: 20,
+                              child: Container(
+                                height: 30,
+                                width: 65,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFedeeef),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.fromLTRB(
+                                        0,
+                                        0,
+                                        3,
+                                        0,
+                                      ),
+                                      child: Image.asset(
+                                        "assets/images/images/Rating.png",
+                                        height: 15,
+                                        width: 15,
                                       ),
                                     ),
-                                  ),
+                                    Text(
+                                      "5",
+                                      //  "${properties![index1].rating.toInt() ?? ""}",
+                                      style: const TextStyle(
+                                        fontFamily: FontFamily.gilroyMedium,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                              ),
+                            ),
+
                             Positioned(
                               bottom: 10,
                               child: SizedBox(
+                                height: 130,
                                 width: 240,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const SizedBox(height: 10),
+                                    SizedBox(height: 10),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 3,
+                                      padding: const EdgeInsets.only(
+                                        left: 12,
+                                        top: 10,
                                       ),
-                                      child: AppCustomText(
-                                        titleText:
-                                            properties![index1].name ?? "",
+                                      child: Text(
+                                        properties![index1]?.name ?? "",
                                         maxLines: 1,
                                         style: const TextStyle(
                                           fontSize: 17,
                                           fontFamily: FontFamily.gilroyBold,
                                           color: Colors.white,
-                                          fontWeight: FontWeight.bold,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -765,7 +745,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                           const SizedBox(width: 2),
                                           Text(
-                                            properties![index1].country ?? "",
+                                            properties![index1].countryName ??
+                                                "",
                                             maxLines: 1,
                                             style: const TextStyle(
                                               fontFamily:
@@ -796,45 +777,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 ),
                                                 const SizedBox(width: 5),
                                                 index == 0
-                                                    ? Container(
-                                                      child: Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .start,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          AppCustomText(
-                                                            titleText:
-                                                                "${properties![index1].beds}",
-                                                            style: const TextStyle(
-                                                              fontFamily:
-                                                                  FontFamily
-                                                                      .gilroyMedium,
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 12,
-                                                            ),
-                                                          ),
-                                                          Text(
-                                                            " Beds",
-                                                            style: const TextStyle(
-                                                              fontFamily:
-                                                                  FontFamily
-                                                                      .gilroyMedium,
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 12,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    )
-                                                    : index == 1
-                                                    ? AppCustomText(
-                                                      titleText:
-                                                          "${properties[index1].baths} Bath",
+                                                    ? Text(
+                                                      //  ${properties![index1].beds}
+                                                      "3 Beds",
                                                       style: const TextStyle(
                                                         fontFamily:
                                                             FontFamily
@@ -846,9 +791,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         fontSize: 12,
                                                       ),
                                                     )
-                                                    : AppCustomText(
-                                                      titleText:
-                                                          "${properties?[index1].sqft} Sqft",
+                                                    : index == 1
+                                                    ? Text(
+                                                      "2 Bath",
+                                                      style: const TextStyle(
+                                                        fontFamily:
+                                                            FontFamily
+                                                                .gilroyMedium,
+                                                        color: Colors.white,
+                                                        overflow:
+                                                            TextOverflow
+                                                                .ellipsis,
+                                                        fontSize: 12,
+                                                      ),
+                                                    )
+                                                    : Text(
+                                                      "${properties[index1].size} Sqft",
                                                       style: const TextStyle(
                                                         fontFamily:
                                                             FontFamily
@@ -877,7 +835,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             vertical: 10,
                                           ),
                                           child: Text(
-                                            "${currency}${properties![index1].price}",
+                                            "${currency}${properties![index1].dailyPrice}",
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontFamily: FontFamily.gilroyBold,
@@ -885,22 +843,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
                                         ),
-                                        properties![index1].rating == "1"
-                                            ? Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 5,
-                                                top: 10,
-                                              ),
-                                              child: Text(
-                                                "/night".tr,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontFamily:
-                                                      FontFamily.gilroyMedium,
-                                                ),
-                                              ),
-                                            )
-                                            : const Text(""),
                                       ],
                                     ),
                                   ],
@@ -984,17 +926,17 @@ class _HomeScreenState extends State<HomeScreen> {
       scrollDirection: Axis.vertical,
       itemBuilder: (context, index) {
         final property = properties[index];
-        return DynamicPropertyCard<PropertyModel>(
+        return DynamicPropertyCard<Property>(
           property: property,
-          titleExtractor: (p) => p.title,
-          priceExtractor: (p) => '\$${p.price.toInt()}',
-          locationCodeExtractor: (p) => p.locationCode,
+          titleExtractor: (p) => p.nameEn,
+          priceExtractor: (p) => '\$${p.dailyPrice}',
+          locationCodeExtractor: (p) => p.location,
           locationExtractor: (p) => p.location,
-          bedsExtractor: (p) => p.beds,
-          bathsExtractor: (p) => p.baths,
-          kitchensExtractor: (p) => p.kitchens,
-          imageUrlExtractor: (p) => p.imageUrl,
-          isFavoriteExtractor: (p) => p.isFavorite,
+          bedsExtractor: (p) => 3,
+          bathsExtractor: (p) => 3,
+          kitchensExtractor: (p) => 2,
+          imageUrlExtractor: (p) => p.mainImage,
+          //isFavoriteExtractor: (p) => p.isFavorite,
           propertyTypeExtractor: (p) => p.propertyType,
           // onFavoriteToggle: _toggleFavorite,
           onTap: (p) => _navigateToDetails(p.id),

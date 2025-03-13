@@ -20,13 +20,12 @@ class LanguageScreen extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.grey[100],
-        elevation: 0,
-        automaticallyImplyLeading: false,
+        elevation: 0,automaticallyImplyLeading: false,
         title: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12.0),
           child: AppCustomText(
             titleText: appLocalizations.translate('language'),
-            style: const TextStyle(
+            textStyle: const TextStyle(
               color: Colors.black,
               fontSize: 25,
               fontWeight: FontWeight.bold,
@@ -48,24 +47,22 @@ class LanguageScreen extends StatelessWidget {
               children: [
                 AppCustomText(
                   titleText: appLocalizations.translate('CHOOSE_LANG'),
-                  style: const TextStyle(
+                  textStyle: const TextStyle(
                     color: Colors.black,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                5.verticalSpace,
+                20.verticalSpace,
                 AppCustomText(
                   titleText: appLocalizations.translate('DESC_LANG'),
-                  style: const TextStyle(
+                  textStyle: const TextStyle(
                     color: Colors.black,
                     fontSize: 20,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                30.verticalSpace,
-                Image.asset("assets/images/lang.png", height: 200,fit: BoxFit.contain,),
-                30.verticalSpace,
+                10.verticalSpace,
                 Expanded(
                   // Added Expanded widget to give ListView a defined height
                   child: ListView.builder(
@@ -116,7 +113,7 @@ class LanguageScreen extends StatelessWidget {
                           ),
                           title: AppCustomText(
                             titleText: languageName,
-                            style: TextStyle(
+                            textStyle: TextStyle(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w500,
                             ),
@@ -134,7 +131,7 @@ class LanguageScreen extends StatelessWidget {
                 ElevatedButtonApp(
                   onPresses: () {
                     context.read<LanguageBloc>().add(
-                      LanguageSelected(state.selectedLanguage?.code ?? ''),
+                      LanguageSelected(state.selectedLanguage?.code??'')
                     );
                     Navigator.pushNamed(context, AppRoutes.BottoBarScreen);
                   },

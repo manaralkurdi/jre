@@ -1,7 +1,9 @@
 import 'package:jre_app/base/bloc/base_bloc.dart';
 
-import '../../../model/home/proparty_model.dart' show Property;
-enum HomeStatus { initial, loading, loaded, error }
+import '../../../domain/model/home/Real_estate_ourReco_model.dart';
+import '../../../domain/model/home/proparty_model.dart';
+
+enum HomeStatus { initial, loading, loaded, error,apiSuccess }
 
 class HomeState extends BaseState {
   final HomeStatus status;
@@ -10,14 +12,15 @@ class HomeState extends BaseState {
   final List<Property> featuredProperties;
   final List<Property> recommendedProperties;
   final List<Property> filteredProperties;
+  final List<PropertyDataCategory> categoryProperties;
   final String selectedPropertyType;
   final String? errorMessage;
 
   HomeState({
     required this.status,
-
     this.isLoading = false,
     this.featuredProperties = const [],
+    this.categoryProperties = const [],
     this.recommendedProperties = const [],
     this.filteredProperties = const [],
     this.selectedPropertyType = 'All',
@@ -28,7 +31,7 @@ class HomeState extends BaseState {
     featuredProperties: [],
     recommendedProperties: [],
     filteredProperties: [],
-    selectedPropertyType: 'All',
+    selectedPropertyType: 'All',categoryProperties: [],
     errorMessage: null,
   );
   HomeState copyWith({
@@ -38,6 +41,7 @@ class HomeState extends BaseState {
     List<Property>? featuredProperties,
     List<Property>? recommendedProperties,
     List<Property>? filteredProperties,
+    List<PropertyDataCategory>? categoryProperties,
     String? selectedPropertyType,
     String? errorMessage,
   }) {
@@ -45,6 +49,7 @@ class HomeState extends BaseState {
       status: status ?? this.status,
       isLoading: isLoading ?? this.isLoading,
       featuredProperties: featuredProperties ?? this.featuredProperties,
+      categoryProperties: categoryProperties ?? this.categoryProperties,
       recommendedProperties: recommendedProperties ?? this.recommendedProperties,
       filteredProperties: filteredProperties ?? this.filteredProperties,
       selectedPropertyType: selectedPropertyType ?? this.selectedPropertyType,
@@ -56,7 +61,7 @@ class HomeState extends BaseState {
     status,
     featuredProperties,
     recommendedProperties,
-    filteredProperties,
+    filteredProperties,categoryProperties,
     selectedPropertyType,
     errorMessage,
   ];

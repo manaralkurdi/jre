@@ -35,7 +35,7 @@ class ElevatedButtonApp extends StatelessWidget {
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
           ),
           backgroundColor: MaterialStateProperty.all(
-            backgroundColor ?? Colors.white10,
+            backgroundColor ?? Colors.blueGrey,
           ),
         ),
         onPressed: onPresses,
@@ -50,7 +50,7 @@ class ElevatedButtonApp extends StatelessWidget {
                       Text(
                         appLocalizations.translate(textButton),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: textColor ?? Colors.black,
+                          color: textColor ?? Colors.white,
                         ),
                         textAlign: TextAlign.center,
                       ),

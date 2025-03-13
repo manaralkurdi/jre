@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:jre_app/base/component/app_custom_text.dart';
 
-import '../../../model/home/proparty_model.dart';
 import '../widget/Search_page.dart';
 import 'dynamic_property.dart';
 

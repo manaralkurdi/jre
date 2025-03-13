@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:jre_app/routes/app_route.dart';
 import 'package:jre_app/routes/app_route_name.dart';
@@ -50,7 +51,7 @@ class MyApp extends StatelessWidget {
                      //     fontFamily: "Gilroy",
               ),
               onGenerateRoute: _appRouter.onGenerateRoute,
-              initialRoute: AppRoutes.SPLASH,
+              initialRoute: AppRoutes.CHANGE_LANGUAGE,
 
               supportedLocales: const [
                 Locale('en', 'US'),

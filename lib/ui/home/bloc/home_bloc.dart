@@ -1,89 +1,104 @@
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:jre_app/base/bloc/base_bloc.dart';
 
+import '../../../data/lib/base/error_response.dart';
+import '../../../domain/model/home/Real_estate_ourReco_model.dart';
+import '../../../domain/model/home/filter_request.dart';
+import '../../../domain/model/home/proparty_model.dart';
+import '../../../domain/repositry/home/repositry_random.dart';
 import 'home_event.dart';
-import 'home_repo.dart';
 import 'home_state.dart';
 
 class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
-  HomeBloc() : super(initialState: HomeState.initial()) {
-    on<LoadHomeDataEvent>(_onLoadHomeData);
-    on<FilterPropertiesEvent>(_onFilterProperties);
+  final RealEstateRepositoryType  repository ;
+
+  HomeBloc(this.repository) : super(initialState: HomeState.initial()) {
+    on<LoadHomeDataEvent>(_loadHomeDataEvent);
+    on<FeaturedLoaded>(_onFetchFeaturedList);
+    on<CategoryDetailsLoaded>(_onFetchCategoryList);
+    on<RealEstateRandomLoaded>(_onFetchRandomProperties);
+    on<PropertyDetailsLoaded>(_onDetailsList);
+    on<FilterResult>(_onFilterSearch);
     // on<FetchUserLocation>(_onFetchUserLocation); on<HomeEvent>((event, emit) {
     //   // TODO: implement event handler
     // });
   }
 
-  Future<void> _onLoadHomeData(
-    LoadHomeDataEvent event,
-    Emitter<HomeState> emit,
-  ) async {
-    PropertyRepository? repository = PropertyRepository();
 
-    emit(state.copyWith(isLoading: true, errorMessage: null));
+  Future<void> _loadHomeDataEvent(LoadHomeDataEvent event,
+      Emitter<HomeState> emit) async {
+    emit.call(state.copyWith(status: HomeStatus.loading,));
 
-    try {
-      final properties = await repository.getProperties();
-
-      // For simplicity, we'll use the same list for featured and recommended
-      // In a real app, these would come from different API endpoints
-      emit(
-        state.copyWith(
-          isLoading: false,
-          featuredProperties: properties,
-          recommendedProperties: properties,
-          filteredProperties: properties,
-        ),
-      );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          errorMessage: 'Failed to load properties: ${e.toString()}',
-        ),
-      );
-    }
+    add(FeaturedLoaded());
+    add(RealEstateRandomLoaded());
   }
 
-  void _onFilterProperties(
-    FilterPropertiesEvent event,
-    Emitter<HomeState> emit,
-  ) {
-    emit(
-      state.copyWith(
-        isLoading: true,
-        selectedPropertyType: event.propertyType,
-        errorMessage: null,
-      ),
-    );
+  Future<void> _onFetchRandomProperties(RealEstateRandomLoaded event,
+      Emitter<HomeState> emit) async {
+    emit.call(state.copyWith(status: HomeStatus.loading,));
+    final Either<ErrorResponse, RealEstateResponse> result =
+    await repository.getRandomProperties();
+    result.fold((error) {
+      emit.call(state.copyWith(
+          status: HomeStatus.error, errorMessage: error.message));
+    }, (data) {
+      emit.call(state.copyWith(status: HomeStatus.apiSuccess,recommendedProperties: data.data));
+    });
+  }
 
-    try {
-      if (event.propertyType == 'All') {
-        emit(
-          state.copyWith(
-            isLoading: false,
-            filteredProperties: state.featuredProperties,
-          ),
-        );
-      } else {
-        final filteredProperties =
-            state.featuredProperties
-                .where((property) => property.type == event.propertyType)
-                .toList();
-        emit(
-          state.copyWith(
-            isLoading: false,
-            filteredProperties: state.featuredProperties,
-          ),
-        );
-      }
-    } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          errorMessage: 'Failed to filter properties: ${e.toString()}',
-        ),
-      );
-    }
+
+  Future<void> _onFetchCategoryList(CategoryDetailsLoaded event,
+      Emitter<HomeState> emit) async {
+    emit.call(state.copyWith(status: HomeStatus.loading,));
+    final Either<ErrorResponse, PropertyCategoryResponse> result =
+    await repository.getCategoryDetails(id: event.id);
+    result.fold((error) {
+      emit.call(state.copyWith(
+          status: HomeStatus.error, errorMessage: error.message));
+    }, (data) {
+      emit.call(state.copyWith(status: HomeStatus.apiSuccess,categoryProperties: data.data));
+    });
+  }
+  Future<void> _onFetchFeaturedList(FeaturedLoaded event,
+      Emitter<HomeState> emit) async {
+    emit.call(state.copyWith(status: HomeStatus.loading,));
+    final Either<ErrorResponse, RealEstateResponse> result =
+    await repository.getFeaturedList();
+    result.fold((error) {
+      emit.call(state.copyWith(
+          status: HomeStatus.error, errorMessage: error.message));
+    }, (data) {
+      emit.call(state.copyWith(status: HomeStatus.apiSuccess,featuredProperties: data.data));
+    });
+  }
+
+  Future<void> _onDetailsList(PropertyDetailsLoaded event,
+      Emitter<HomeState> emit) async {
+    emit.call(state.copyWith(status: HomeStatus.loading,));
+    final Either<ErrorResponse, PropertyCategoryResponse> result =
+    await repository.getDetails(id: event.id);
+    result.fold((error) {
+      emit.call(state.copyWith(
+          status: HomeStatus.error, errorMessage: error.message));
+    }, (data) {
+      emit.call(state.copyWith(status: HomeStatus.apiSuccess,categoryProperties: data.data));
+    });
+  }
+
+
+  Future<void> _onFilterSearch(FilterResult event,
+      Emitter<HomeState> emit) async {
+    final filterRequest = RealEstateFilterRequest();
+    emit.call(state.copyWith(status: HomeStatus.loading,));
+    final Either<ErrorResponse, PropertyCategoryResponse> result =
+    await repository.getFilter(request: filterRequest);
+    result.fold((error) {
+      emit.call(state.copyWith(
+          status: HomeStatus.error, errorMessage: error.message));
+    }, (data) {
+      emit.call(state.copyWith(status: HomeStatus.apiSuccess,categoryProperties: data.data));
+    });
   }
 }
+

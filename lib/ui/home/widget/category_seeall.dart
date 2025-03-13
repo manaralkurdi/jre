@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:jre_app/base/component/app_custom_text.dart';
 
 import '../../../theme/bloc/theme_bloc/theme_bloc.dart' show StatelessWidget;
 import '../../../utils/fontfamily_model.dart';
@@ -21,7 +20,7 @@ class CategoryAndSeeAllWidget extends StatelessWidget {
     return Row(
       children: [
         const SizedBox(width: 15),
-        AppCustomText(titleText:
+        Text(
           name,
           style: TextStyle(
             fontSize: 17,
@@ -30,6 +29,7 @@ class CategoryAndSeeAllWidget extends StatelessWidget {
             color: Colors.black
           ),
         ),
+        const Spacer(),
         TextButton(
           onPressed: () {
             if (name == "Featured".tr) {

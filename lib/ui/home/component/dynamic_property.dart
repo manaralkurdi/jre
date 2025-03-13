@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:jre_app/base/component/app_custom_text.dart';
 
 /// A generic property card that can work with any property model
 /// by using a flexible approach with callbacks to extract data
@@ -8,28 +7,28 @@ class DynamicPropertyCard<T> extends StatelessWidget {
   final T property;
 
   /// Callback to extract the title from the property
-  final String Function(T property)? titleExtractor;
+  final String Function(T property) titleExtractor;
 
   /// Callback to extract the price from the property
-  final String Function(T property)? priceExtractor;
+  final String Function(T property) priceExtractor;
 
   /// Callback to extract the location code from the property
-  final String Function(T property)? locationCodeExtractor;
+  final String Function(T property) locationCodeExtractor;
 
   /// Callback to extract the location from the property
-  final String Function(T property)? locationExtractor;
+  final String Function(T property) locationExtractor;
 
   /// Callback to extract the number of beds from the property
-  final int Function(T property) ?bedsExtractor;
+  final int Function(T property) bedsExtractor;
 
   /// Callback to extract the number of baths from the property
-  final int Function(T property) ?bathsExtractor;
+  final int Function(T property) bathsExtractor;
 
   /// Callback to extract the number of kitchens from the property
-  final int Function(T property) ? kitchensExtractor;
+  final int Function(T property) kitchensExtractor;
 
   /// Callback to extract the image URL from the property
-  final String Function(T property) ? imageUrlExtractor;
+  final String Function(T property) imageUrlExtractor;
 
   /// Optional callback for handling favorite toggle
   final Function(T property, bool isFavorite)? onFavoriteToggle;
@@ -46,14 +45,14 @@ class DynamicPropertyCard<T> extends StatelessWidget {
   const DynamicPropertyCard({
     Key? key,
     required this.property,
-     this.titleExtractor,
-     this.priceExtractor,
-     this.locationCodeExtractor,
-     this.locationExtractor,
-     this.bedsExtractor,
-     this.bathsExtractor,
-     this.kitchensExtractor,
-     this.imageUrlExtractor,
+    required this.titleExtractor,
+    required this.priceExtractor,
+    required this.locationCodeExtractor,
+    required this.locationExtractor,
+    required this.bedsExtractor,
+    required this.bathsExtractor,
+    required this.kitchensExtractor,
+    required this.imageUrlExtractor,
     this.onFavoriteToggle,
     this.onTap,
     this.isFavoriteExtractor,
@@ -88,9 +87,11 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                 children: [
                   // Image
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius:  BorderRadius.circular(30
+                    ),
                     child: Image.network(
-                      imageUrlExtractor!(property),
+
+                      imageUrlExtractor(property),
                       height: 200,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -133,10 +134,9 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                             isFavoriteExtractor!(property)
                                 ? Icons.favorite
                                 : Icons.favorite_border,
-                            color:
-                                isFavoriteExtractor!(property)
-                                    ? Colors.red
-                                    : Colors.grey,
+                            color: isFavoriteExtractor!(property)
+                                ? Colors.red
+                                : Colors.grey,
                             size: 20,
                           ),
                         ),
@@ -184,20 +184,20 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: AppCustomText(
-                            titleText: titleExtractor!(property),
+                          child: Text(
+                            titleExtractor(property),
                             style: TextStyle(
-                              fontSize: 17,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: isDark ? Colors.white : Colors.black87,
-                              overflow: TextOverflow.ellipsis,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        AppCustomText(
-                          titleText: priceExtractor!(property),
+                        Text(
+                          priceExtractor(property),
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Color(0xff3D5BF6),
                           ),
@@ -205,28 +205,31 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
                     // Location
                     Row(
                       children: [
-                        Icon(Icons.location_on, color: Colors.grey, size: 18),
+                        Icon(
+                          Icons.location_on,
+                          color: Colors.grey,
+                          size: 18,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
-                          child: AppCustomText(
-                            titleText:
-                                '${locationCodeExtractor!(property)}  ${locationExtractor!(property)}',
+                          child: Text(
+                            '${locationCodeExtractor(property)}  ${locationExtractor(property)}',
                             style: const TextStyle(
-                              fontSize: 15,
+                              fontSize: 16,
                               color: Colors.grey,
-                              overflow: TextOverflow.ellipsis,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 12),
 
                     // Property Details Row
                     Row(
@@ -235,7 +238,7 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                         // Bed
                         _buildFeatureItem(
                           icon: Icons.bed,
-                          value: '${bedsExtractor!(property)} Bed',
+                          value: '${bedsExtractor(property)} Bed',
                           iconColor: Colors.redAccent,
                         ),
 
@@ -244,7 +247,7 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                         // Bath
                         _buildFeatureItem(
                           icon: Icons.bathtub,
-                          value: '${bathsExtractor!(property)} Bath',
+                          value: '${bathsExtractor(property)} Bath',
                           iconColor: Colors.redAccent,
                         ),
 
@@ -253,7 +256,7 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                         // Kitchen
                         _buildFeatureItem(
                           icon: Icons.kitchen,
-                          value: '${kitchensExtractor!(property)} Kitchen',
+                          value: '${kitchensExtractor(property)} Kitchen',
                           iconColor: Colors.redAccent,
                         ),
                       ],
@@ -275,11 +278,18 @@ class DynamicPropertyCard<T> extends StatelessWidget {
   }) {
     return Row(
       children: [
-        Icon(icon, color: iconColor, size: 16),
+        Icon(
+          icon,
+          color: iconColor,
+          size: 20,
+        ),
         const SizedBox(width: 4),
-        AppCustomText(
-          titleText: value,
-          style: const TextStyle(fontSize: 14, color: Colors.grey),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+          ),
         ),
       ],
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:jre_app/base/component/app_custom_text.dart';
+import 'package:get/get.dart';
+import 'package:jre_app/data/lib/base/app_config.dart';
+import 'package:jre_app/domain/repositry/home/repositry_random.dart';
 import 'package:jre_app/ui/home/ui/home_page.dart';
 
 import '../../utils/Colors.dart';
@@ -19,6 +21,7 @@ late TabController tabController;
 
 class _BottoBarScreenState extends State<BottoBarScreen>
     with TickerProviderStateMixin {
+
   int _currentIndex = 0;
   var isLogin;
 
@@ -27,17 +30,19 @@ class _BottoBarScreenState extends State<BottoBarScreen>
 
   // List of screens for each tab
   late List<Widget> myChilders;
-
   @override
   void initState() {
     super.initState();
 
     // Initialize the HomeBloc
-    homeBloc = HomeBloc();
+    homeBloc = HomeBloc(AppConfig as RealEstateRepositoryType);
 
     // Initialize screens with appropriate BLoC providers
     myChilders = [
-      BlocProvider.value(value: homeBloc, child: const HomeScreen()),
+      BlocProvider.value(
+        value: homeBloc,
+        child: const HomeScreen(),
+      ),
       BlocProvider.value(
         value: homeBloc,
         child: const HomeScreen(), // This would be NearbyScreen in real app
@@ -59,6 +64,7 @@ class _BottoBarScreenState extends State<BottoBarScreen>
         _currentIndex = tabController.index;
       });
     });
+
   }
 
   @override
@@ -71,6 +77,7 @@ class _BottoBarScreenState extends State<BottoBarScreen>
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: TabBarView(
@@ -95,10 +102,7 @@ class _BottoBarScreenState extends State<BottoBarScreen>
               if (index == 0) {
                 // Home tab selected - refresh home data
                 if (myChilders[0] is BlocProvider) {
-                  final homeBloc = BlocProvider.of<HomeBloc>(
-                    context,
-                    listen: false,
-                  );
+                  final homeBloc = BlocProvider.of<HomeBloc>(context, listen: false);
                   homeBloc.add(LoadHomeDataEvent());
                 }
               } else if (index == 1) {
@@ -120,33 +124,28 @@ class _BottoBarScreenState extends State<BottoBarScreen>
             indicatorSize: TabBarIndicatorSize.label,
             unselectedLabelColor: Colors.grey,
             controller: tabController,
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            // Reduced padding
+            padding: const EdgeInsets.symmetric(vertical: 2), // Reduced padding
             tabs: [
               // Home Tab
               Tab(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min, // Add this to minimize height
                   children: [
                     Image.asset(
                       "assets/images/images/${_currentIndex == 0 ? "HomeBold.png" : "Home.png"}",
-                      scale: 24,
-                      color:
-                          _currentIndex == 0
-                              ? const Color(0xff3D5BF6)
-                              : BlackColor,
+                      scale: 21,
+                      color: _currentIndex == 0
+                          ? const Color(0xff3D5BF6)
+                          : BlackColor,
                     ),
                     const SizedBox(height: 2), // Reduced spacing
-                    AppCustomText(
-                      titleText: "Home",
+                    Text(
+                      "Home".tr,
                       style: TextStyle(
                         fontSize: 12, // Reduced font size
                         fontFamily: FontFamily.gilroyMedium,
                         color:
-                            _currentIndex == 0
-                                ? const Color(0xff3D5BF6)
-                                : Colors.grey,
+                        _currentIndex == 0 ? const Color(0xff3D5BF6) : Colors.grey,
                       ),
                     ),
                   ],
@@ -161,22 +160,20 @@ class _BottoBarScreenState extends State<BottoBarScreen>
                     Image.asset(
                       "assets/images/images/${_currentIndex == 1 ? "mapbold.png" : "map.png"}",
                       scale: 3.7,
-                      color:
-                          _currentIndex == 1
-                              ? const Color(0xff3D5BF6)
-                              : BlackColor,
+                      color: _currentIndex == 1
+                          ? const Color(0xff3D5BF6)
+                          : BlackColor,
                       height: 20, // Specify height to control size
                     ),
                     const SizedBox(height: 2), // Reduced spacing
-                    AppCustomText(
-                      titleText: "Nearby",
+                    Text(
+                      "Nearby".tr,
                       style: TextStyle(
                         fontSize: 12, // Reduced font size
                         fontFamily: FontFamily.gilroyMedium,
-                        color:
-                            _currentIndex == 1
-                                ? const Color(0xff3D5BF6)
-                                : Colors.grey,
+                        color: _currentIndex == 1
+                            ? const Color(0xff3D5BF6)
+                            : Colors.grey,
                       ),
                     ),
                   ],
@@ -190,22 +187,20 @@ class _BottoBarScreenState extends State<BottoBarScreen>
                   children: [
                     Image.asset(
                       "assets/images/images/${_currentIndex == 2 ? "heartBold.png" : "heartline.png"}",
-                      scale: 24,
-                      color:
-                          _currentIndex == 2
-                              ? const Color(0xff3D5BF6)
-                              : BlackColor,
+                      scale: 21,
+                      color: _currentIndex == 2
+                          ?  const Color(0xff3D5BF6)
+                          : BlackColor,
                     ),
-                    const SizedBox(height: 2), // Reduced spacing
-                    AppCustomText(
-                      titleText: "Favorite",
+                      const SizedBox(height: 2), // Reduced spacing
+                    Text(
+                      "Favorite".tr,
                       style: TextStyle(
                         fontSize: 12, // Reduced font size
                         fontFamily: FontFamily.gilroyMedium,
-                        color:
-                            _currentIndex == 2
-                                ? const Color(0xff3D5BF6)
-                                : Colors.grey,
+                        color: _currentIndex == 2
+                            ? const Color(0xff3D5BF6)
+                            : Colors.grey,
                       ),
                     ),
                   ],
@@ -214,27 +209,24 @@ class _BottoBarScreenState extends State<BottoBarScreen>
 
               // Account Tab
               Tab(
-                child: Column(// Add this to minimize height
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Add this to minimize height
                   children: [
                     Image.asset(
-                      "assets/images/images/${_currentIndex == 3 ?
-                      "userBold.png" : "userline.png"}",
-                      scale: 24,
-                      color:
-                          _currentIndex == 3
-                              ? const Color(0xff3D5BF6)
-                              : BlackColor,
+                      "assets/images/images/${_currentIndex == 3 ? "userBold.png" : "userline.png"}",
+                      scale: 21,
+                      color: _currentIndex == 3
+                          ? const Color(0xff3D5BF6)
+                          : BlackColor,
                     ),
                     const SizedBox(height: 2), // Reduced spacing
-                    AppCustomText(
-                      titleText: "Account",
+                    Text(
+                      "Account".tr,
                       style: TextStyle(
                         fontSize: 12, // Reduced font size
                         fontFamily: FontFamily.gilroyMedium,
                         color:
-                            _currentIndex == 3
-                                ? const Color(0xff3D5BF6)
-                                : Colors.grey,
+                        _currentIndex == 3 ? const Color(0xff3D5BF6) : Colors.grey,
                       ),
                     ),
                   ],
@@ -247,3 +239,4 @@ class _BottoBarScreenState extends State<BottoBarScreen>
     );
   }
 }
+
