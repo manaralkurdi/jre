@@ -4,9 +4,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:jre_app/base/component/app_custom_text.dart';
+import 'package:jre_app/domain/model/home/details.dart';
 import 'package:jre_app/ui/Details/bloc/property_bloc.dart';
 import 'package:jre_app/ui/home/widget/category_seeall.dart';
+import 'package:jre_app/data/lib/base/app_config.dart';
 
+import '../../../domain/model/home/Real_estate_ourReco_model.dart';
+import '../../../domain/model/home/proparty_model.dart';
+import '../../../domain/repositry/home/repositry_random.dart';
 import '../../../theme/bloc/theme_bloc/theme_bloc.dart';
 import '../../../utils/Colors.dart';
 import '../../../utils/fontfamily_model.dart';
@@ -15,6 +20,7 @@ import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../component/dynamic_property.dart' show DynamicPropertyCard;
+import '../component/search_component.dart';
 import '../widget/department.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -343,14 +349,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _navigateToPropertyDetail(Property property) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PropertyDetailPage(property: property),
-      ),
-    );
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -537,13 +535,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           CategoryAndSeeAllWidget(name: "Featured".tr, buttonName: ""),
-          _buildPropertyList(property),
+          _buildPropertyList(state.featuredProperties),
           CategoryAndSeeAllWidget(
             name: "Our Recommendation".tr,
             buttonName: "",
           ),
           // Our recommendation section
-          _buildRecommendationList(propertyCard),
+          _buildRecommendationList(state.recommendedProperties),
         ],
       ),
     );
@@ -909,8 +907,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder:
-            (context) => BlocProvider<PropertyBloc>(
-              create: (context) => PropertyBloc(),
+            (context) => BlocProvider<HomeBloc>(
+              create: (context) => HomeBloc(AppConfig as RealEstateRepositoryType),
               child: PropertyViewScreen(propertyId: id ?? "1"),
             ),
       ),

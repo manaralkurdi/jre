@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:jre_app/base/component/app_custom_text.dart';
 
+import '../../../domain/model/home/proparty_model.dart';
 import '../widget/Search_page.dart';
 import 'dynamic_property.dart';
 
@@ -305,73 +306,6 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
     );
   }
 
-  List<PropertyModel> propertyCard = [
-    PropertyModel(
-      id: '1',
-      title: 'Delux Apartment',
-      price: 267000,
-      location: 'NY, New York',
-      locationCode: '2BW',
-      beds: 4,
-      baths: 3,
-      kitchens: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2',
-      isFavorite: false,
-      propertyType: 'For Sale',
-    ),
-    PropertyModel(
-      id: '2',
-      title: 'Modern Penthouse',
-      price: 450000,
-      location: 'LA, California',
-      locationCode: '3AC',
-      beds: 5,
-      baths: 4,
-      kitchens: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-      isFavorite: true,
-      propertyType: 'Premium',
-    ),
-    PropertyModel(
-      id: '3',
-      title: 'Cozy Studio',
-      price: 120000,
-      location: 'Chicago, Illinois',
-      locationCode: '1CS',
-      beds: 1,
-      baths: 1,
-      kitchens: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1554995207-c18c203602cb',
-      isFavorite: false,
-      propertyType: 'For Rent',
-    ),
-    PropertyModel(
-      id: '4',
-      title: 'Seaside Villa',
-      price: 870000,
-      location: 'Miami, Florida',
-      locationCode: '5SV',
-      beds: 6,
-      baths: 5,
-      kitchens: 2,
-      imageUrl: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914',
-      isFavorite: false,
-      propertyType: 'Luxury',
-    ),
-    PropertyModel(
-      id: '5',
-      title: 'Family Home',
-      price: 320000,
-      location: 'Boston, Massachusetts',
-      locationCode: '4FH',
-      beds: 4,
-      baths: 3,
-      kitchens: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6',
-      isFavorite: true,
-      propertyType: 'For Sale',
-    ),
-  ];
 
   Widget _buildCounterField(String title, int value, Function(int) onChanged) {
     // Check if UI is in RTL mode for Arabic
@@ -426,31 +360,4 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
     );
   }
 
-  Widget _buildSearchList(properties) {
-    return ListView.builder(
-      primary: true,
-      shrinkWrap: true,
-      itemCount: properties.length,
-      physics: const NeverScrollableScrollPhysics(),
-      scrollDirection: Axis.vertical,
-      itemBuilder: (context, index) {
-        final property = properties[index];
-        return DynamicPropertyCard<PropertyModel>(
-          property: property,
-          titleExtractor: (p) => p.title,
-          priceExtractor: (p) => '\$${p.price.toInt()}',
-          locationCodeExtractor: (p) => p.locationCode,
-          locationExtractor: (p) => p.location,
-          bedsExtractor: (p) => p.beds,
-          bathsExtractor: (p) => p.baths,
-          kitchensExtractor: (p) => p.kitchens,
-          imageUrlExtractor: (p) => p.imageUrl,
-          isFavoriteExtractor: (p) => p.isFavorite,
-          propertyTypeExtractor: (p) => p.propertyType,
-          // onFavoriteToggle: _toggleFavorite,
-          // onTap: (p) => _navigateToDetails(p),
-        );
-      },
-    );
-  }
 }

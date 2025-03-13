@@ -3,6 +3,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:jre_app/utils/ui_util.dart';
 
 import '../../theme/bloc/theme_bloc/theme_bloc.dart';
+import '../../translation/translation.dart';
 
 
 class AppCustomText extends StatelessWidget with UiUtil {
@@ -13,7 +14,7 @@ class AppCustomText extends StatelessWidget with UiUtil {
     this.fontWeight,
     this.maxLines,
     this.lines,
-    this.textStyle,
+    this.style,
     this.textCenter,
     this.enableShimmer = false,
     this.widthShimmer,
@@ -26,18 +27,19 @@ class AppCustomText extends StatelessWidget with UiUtil {
   final double? heightShimmer;
   final bool? textCenter;
   final bool enableShimmer;
-  final TextStyle? textStyle;
+  final TextStyle? style;
   final FontWeight? fontWeight;
   final int? maxLines;
   final int? lines;
 
   @override
   Widget build(BuildContext context) {
+    final appLocalizations = AppLocalizations.of(context);
     return AutoSizeText(
-      titleText,
+      appLocalizations.translate(titleText),
       maxLines: maxLines ?? 2,
       overflow: TextOverflow.ellipsis,
-      style: textStyle ??
+      style: style ??
           Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: textColor ?? Colors.black,
                 fontWeight: fontWeight ?? FontWeight.w500,

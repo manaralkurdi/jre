@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
+import 'package:jre_app/ui/home/bloc/home_bloc.dart';
 import 'package:readmore/readmore.dart';
-import '../../../model/home/details_model.dart';
-import '../bloc/property_bloc.dart';
+import '../../../domain/model/home/details.dart';
+import '../../home/bloc/home_event.dart';
+import '../../home/bloc/home_state.dart';
 
 class PropertyViewScreen extends StatefulWidget {
-  final String propertyId;
+  final int propertyId;
 
   const PropertyViewScreen({
     Key? key,
@@ -22,12 +24,11 @@ class PropertyViewScreen extends StatefulWidget {
 class _PropertyViewScreenState extends State<PropertyViewScreen> {
   int _selectedImageIndex = 0;
   final List<Marker> _markers = <Marker>[];
-  GoogleMapController? _mapController;
 
   @override
   void initState() {
     super.initState();
-    context.read<PropertyBloc>().add(LoadPropertyDetails(widget.propertyId));
+    context.read<HomeBloc>().add(PropertyDetailsLoaded(id:widget.propertyId));
   }
 
   Future<Uint8List> _getMarkerImage(String path, int width) async {
@@ -42,17 +43,18 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
         .asUint8List();
   }
 
-  void _setupMarker(PropertyDetailsModel property) async {
+  void _setupMarker(DetailsProperty property) async {
     final Uint8List markerIcon = await _getMarkerImage("assets/images/images/MapPin.png", 100);
 
     setState(() {
       _markers.add(
         Marker(
-          markerId: MarkerId(property.id),
+          markerId: MarkerId(property.id??""),
           icon: BitmapDescriptor.fromBytes(markerIcon),
           position: LatLng(
-            property.latitude,
-            property.longtitude,
+              31.994717, 35.933664
+            // property.latitude,
+            // property.longtitude,
           ),
         ),
       );
@@ -63,19 +65,19 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: BlocConsumer<PropertyBloc, PropertyState>(
+      body: BlocConsumer<HomeBloc, HomeState>(
         listener: (context, state) {
           // Handle success messages
-          if (state.successMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.successMessage!),
-                backgroundColor: Colors.green,
-              ),
-            );
-            // Clear messages after showing them
-            context.read<PropertyBloc>().add(ClearMessages());
-          }
+          // if (state.status != null) {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     SnackBar(
+          //       content: Text(state.successMessage!),
+          //       backgroundColor: Colors.green,
+          //     ),
+          //   );
+          //   // Clear messages after showing them
+          //   context.read<PropertyBloc>().add(ClearMessages());
+          // }
 
           // Handle error messages
           if (state.errorMessage != null) {
@@ -86,7 +88,7 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
               ),
             );
             // Clear messages after showing them
-            context.read<PropertyBloc>().add(ClearMessages());
+         //   context.read<PropertyBloc>().add(ClearMessages());
           }
         },
         builder: (context, state) {
@@ -94,18 +96,18 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
             return Center(child: CircularProgressIndicator());
           }
 
-          if (state.selectedProperty == null) {
-            return Center(child: Text("Property not found"));
-          }
+          // if (state.selectedProperty == null) {
+          //   return Center(child: Text("Property not found"));
+          // }
 
-          final property = state.selectedProperty!.propetydetails;
-          final facilities = state.selectedProperty!.facility;
-          final gallery = state.selectedProperty!.gallery;
-          final reviews = state.selectedProperty!.reviewlist;
+          final property = state.detailsProperties;
+          // final facilities = state.selectedProperty!.facility;
+          // final gallery = state.selectedProperty!.gallery;
+          // final reviews = state.selectedProperty!.reviewlist;
 
           // Setup map marker
           if (_markers.isEmpty) {
-            _setupMarker(property);
+            _setupMarker(state.detailsProperties);
           }
 
           return NestedScrollView(
@@ -124,9 +126,9 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
                   flexibleSpace: FlexibleSpaceBar(
                     background: Stack(
                       children: [
-                        _buildImagePageView(property.image),
-                        _buildImageIndicators(property.image.length),
-                        _buildPanoramaButton(property.image),
+                        _buildImagePageView(property.additionalImages),
+                        _buildImageIndicators(property.additionalImages.length),
+                       // _buildPanoramaButton(property.image),
                       ],
                     ),
                   ),
@@ -145,7 +147,7 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
                       _buildDivider(),
                     ///  _buildHostSection(property),
                       _buildAboutSection(property),
-                      _buildFacilitiesSection(facilities),
+                   //   _buildFacilitiesSection(facilities),
                    //   if (gallery.isNotEmpty) _buildGallerySection(gallery),
                    //   _buildLocationSection(property),
                      // if (reviews.isNotEmpty) _buildReviewsSection(reviews, state.selectedProperty!.totalReview, property.rate),
@@ -181,13 +183,13 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
     );
   }
 
-  Widget _buildFavoriteButton(PropertyDetailsModel property) {
+  Widget _buildFavoriteButton(DetailsProperty property) {
     return InkWell(
       onTap: () {
-        context.read<PropertyBloc>().add(
+        context.read<HomeBloc>().add(
           ToggleFavoriteProperty(
-            propertyId: property.id,
-            propertyType: property.propertyTitle,
+            propertyId: property.id??'',
+            propertyType: property.name??'',
           ),
         );
       },
@@ -209,7 +211,7 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
     );
   }
 
-  Widget _buildImagePageView(List<PropertyImage> images) {
+  Widget _buildImagePageView(List<String> images) {
     return SizedBox(
       height: 470,
       child: PageView.builder(
@@ -221,8 +223,8 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
           });
         },
         itemBuilder: (context, index) {
-          return Image.asset(
-            images[index].image,
+          return Image.network(
+            images[index]??'',
             height: 470,
             width: double.infinity,
             fit: BoxFit.cover,
@@ -273,39 +275,39 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
     );
   }
 
-  Widget _buildPanoramaButton(List<PropertyImage> images) {
-    if (_selectedImageIndex >= images.length ||
-        images[_selectedImageIndex].isPanorama != 1) {
-      return SizedBox.shrink();
-    }
+  // Widget _buildPanoramaButton(List<DetailsProperty> images) {
+  //   if (_selectedImageIndex >= images.length ||
+  //       images[_selectedImageIndex].isPanorama != 1) {
+  //     return SizedBox.shrink();
+  //   }
+  //
+  //   return Positioned(
+  //     bottom: 10,
+  //     right: 10,
+  //     child: InkWell(
+  //       onTap: () {
+  //         // Navigate to panorama viewer
+  //         // Get.toNamed('/panorama', arguments: {'img': images[_selectedImageIndex].image});
+  //       },
+  //       child: Container(
+  //         height: 30,
+  //         width: 70,
+  //         padding: EdgeInsets.all(4),
+  //         child: Image.asset("assets/images/images/360.png"),
+  //         decoration: BoxDecoration(
+  //           borderRadius: BorderRadius.circular(8),
+  //           color: Colors.black.withOpacity(0.5),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
-    return Positioned(
-      bottom: 10,
-      right: 10,
-      child: InkWell(
-        onTap: () {
-          // Navigate to panorama viewer
-          // Get.toNamed('/panorama', arguments: {'img': images[_selectedImageIndex].image});
-        },
-        child: Container(
-          height: 30,
-          width: 70,
-          padding: EdgeInsets.all(4),
-          child: Image.asset("assets/images/images/360.png"),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: Colors.black.withOpacity(0.5),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTitleSection(PropertyDetailsModel property) {
+  Widget _buildTitleSection(DetailsProperty property) {
     return Padding(
       padding: const EdgeInsets.only(left: 15, top: 10),
       child: Text(
-        property.title,
+        property.nameEn??'',
         style: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.bold,
@@ -315,7 +317,7 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
     );
   }
 
-  Widget _buildPropertyTypeAndRating(PropertyDetailsModel property) {
+  Widget _buildPropertyTypeAndRating(DetailsProperty property) {
     return Padding(
       padding: const EdgeInsets.only(left: 15, top: 10),
       child: Row(
@@ -324,7 +326,7 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
             height: 25,
             padding: EdgeInsets.all(5),
             child: Text(
-              property.propertyTitle,
+              property.nameEn??'',
               style: TextStyle(
                 fontWeight: FontWeight.w500,
                 fontSize: 12,
@@ -344,7 +346,8 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
           ),
           SizedBox(width: 7),
           Text(
-            property.rate,
+            "4.5",
+         //   property.rate,
             style: TextStyle(
               color: Colors.grey,
               fontSize: 15,
@@ -356,7 +359,7 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
     );
   }
 
-  Widget _buildAmenitiesSection(PropertyDetailsModel property) {
+  Widget _buildAmenitiesSection(DetailsProperty property) {
     return Padding(
       padding: const EdgeInsets.only(top: 15),
       child: Row(
@@ -364,15 +367,15 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
         children: [
           _buildAmenityItem(
             "assets/images/images/Frame1.png",
-            "${property.beds} Beds",
+            "2 Beds",
           ),
           _buildAmenityItem(
             "assets/images/images/bath.png",
-            "${property.bathroom} Bath",
+            "1 Bath",
           ),
           _buildAmenityItem(
             "assets/images/images/sqft.png",
-            "${property.sqrft} sqft",
+            "${property.size} sqft",
           ),
         ],
       ),
@@ -417,88 +420,88 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
     );
   }
 
-  Widget _buildHostSection(PropertyDetailsModel property) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 15, top: 10),
-          child: Text(
-            "Hosted by",
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-        ),
-        ListTile(
-          leading: Container(
-            height: 60,
-            width: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image: NetworkImage(property.ownerImage),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          title: Text(
-            property.ownerName,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          subtitle: Text(
-            "Partner",
-            style: TextStyle(
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          trailing: SizedBox(
-            width: 100,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                InkWell(
-                  onTap: () {
-                    // Handle phone call
-                  },
-                  child: Image.asset(
-                    "assets/images/images/phone Icon.png",
-                    height: 25,
-                    width: 25,
-                    fit: BoxFit.cover,
-                    color: Colors.blue,
-                  ),
-                ),
-                SizedBox(width: 15),
-                InkWell(
-                  onTap: () {
-                    // Handle chat
-                  },
-                  child: Image.asset(
-                    "assets/images/images/Chat.png",
-                    height: 28,
-                    width: 28,
-                    fit: BoxFit.cover,
-                    color: Colors.blue,
-                  ),
-                ),
-                SizedBox(width: 15),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildHostSection(PropertyDetailsModel property) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Padding(
+  //         padding: const EdgeInsets.only(left: 15, top: 10),
+  //         child: Text(
+  //           "Hosted by",
+  //           style: TextStyle(
+  //             fontSize: 17,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.black,
+  //           ),
+  //         ),
+  //       ),
+  //       ListTile(
+  //         leading: Container(
+  //           height: 60,
+  //           width: 60,
+  //           decoration: BoxDecoration(
+  //             shape: BoxShape.circle,
+  //             image: DecorationImage(
+  //               image: NetworkImage(property.ownerImage),
+  //               fit: BoxFit.cover,
+  //             ),
+  //           ),
+  //         ),
+  //         title: Text(
+  //           property.ownerName,
+  //           style: TextStyle(
+  //             fontSize: 17,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.black,
+  //           ),
+  //         ),
+  //         subtitle: Text(
+  //           "Partner",
+  //           style: TextStyle(
+  //             color: Colors.grey,
+  //             fontWeight: FontWeight.w500,
+  //           ),
+  //         ),
+  //         trailing: SizedBox(
+  //           width: 100,
+  //           child: Row(
+  //             mainAxisAlignment: MainAxisAlignment.end,
+  //             children: [
+  //               InkWell(
+  //                 onTap: () {
+  //                   // Handle phone call
+  //                 },
+  //                 child: Image.asset(
+  //                   "assets/images/images/phone Icon.png",
+  //                   height: 25,
+  //                   width: 25,
+  //                   fit: BoxFit.cover,
+  //                   color: Colors.blue,
+  //                 ),
+  //               ),
+  //               SizedBox(width: 15),
+  //               InkWell(
+  //                 onTap: () {
+  //                   // Handle chat
+  //                 },
+  //                 child: Image.asset(
+  //                   "assets/images/images/Chat.png",
+  //                   height: 28,
+  //                   width: 28,
+  //                   fit: BoxFit.cover,
+  //                   color: Colors.blue,
+  //                 ),
+  //               ),
+  //               SizedBox(width: 15),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
-  Widget _buildAboutSection(PropertyDetailsModel property) {
+  Widget _buildAboutSection(DetailsProperty property) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -516,7 +519,7 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 15, top: 10, right: 15),
           child: ReadMoreText(
-            property.description,
+            property.description??"",
             trimLines: 4,
             colorClickableText: Colors.blue,
             trimMode: TrimMode.Line,
@@ -532,281 +535,281 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
     );
   }
 
-  Widget _buildFacilitiesSection(List<FacilityModel> facilities) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 15, top: 10),
-          child: Text(
-            "What this place offers",
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-        ),
-        SizedBox(height: 15),
-        GridView.builder(
-          shrinkWrap: true,
-          itemCount: facilities.length,
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-          ),
-          itemBuilder: (context, index) {
-            return Column(
-              children: [
-                Container(
-                  height: 60,
-                  width: 60,
-                  alignment: Alignment.center,
-                  child: Image.asset(
-                    facilities[index].img,
-                    height: 25,
-                    width: 25,
-                    color: Colors.blue,
-                  ),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFeef4ff),
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  facilities[index].title,
-                  maxLines: 1,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    overflow: TextOverflow.ellipsis,
-                    color: Colors.black,
-                  ),
-                )
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
+  // Widget _buildFacilitiesSection(List<FacilityModel> facilities) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Padding(
+  //         padding: const EdgeInsets.only(left: 15, top: 10),
+  //         child: Text(
+  //           "What this place offers",
+  //           style: TextStyle(
+  //             fontSize: 17,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.black,
+  //           ),
+  //         ),
+  //       ),
+  //       SizedBox(height: 15),
+  //       GridView.builder(
+  //         shrinkWrap: true,
+  //         itemCount: facilities.length,
+  //         physics: NeverScrollableScrollPhysics(),
+  //         padding: EdgeInsets.zero,
+  //         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+  //           crossAxisCount: 4,
+  //         ),
+  //         itemBuilder: (context, index) {
+  //           return Column(
+  //             children: [
+  //               Container(
+  //                 height: 60,
+  //                 width: 60,
+  //                 alignment: Alignment.center,
+  //                 child: Image.asset(
+  //                   facilities[index].img,
+  //                   height: 25,
+  //                   width: 25,
+  //                   color: Colors.blue,
+  //                 ),
+  //                 decoration: BoxDecoration(
+  //                   shape: BoxShape.circle,
+  //                   color: Color(0xFFeef4ff),
+  //                 ),
+  //               ),
+  //               SizedBox(height: 8),
+  //               Text(
+  //                 facilities[index].title,
+  //                 maxLines: 1,
+  //                 textAlign: TextAlign.center,
+  //                 style: TextStyle(
+  //                   fontWeight: FontWeight.w500,
+  //                   overflow: TextOverflow.ellipsis,
+  //                   color: Colors.black,
+  //                 ),
+  //               )
+  //             ],
+  //           );
+  //         },
+  //       ),
+  //     ],
+  //   );
+  // }
 
-  Widget _buildGallerySection(List<String> gallery) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeaderWithSeeAll(
-            "Gallery",
-            "See All",
-                () {
-              // Navigate to gallery screen
-              // Get.toNamed(Routes.galleryScreen, arguments: {
-              //   "gallery": gallery,
-              //   "propertyId": widget.propertyId,
-              // });
-            }
-        ),
-        Container(
-          height: 110,
-          alignment: Alignment.center,
-          margin: EdgeInsets.only(left: 15),
-          child: ListView.builder(
-            itemCount: gallery.length > 4 ? 4 : gallery.length, // Show max 4 in preview
-            scrollDirection: Axis.horizontal,
-            physics: BouncingScrollPhysics(),
-            itemBuilder: (context, index) {
-              return Container(
-                height: 110,
-                width: 110,
-                margin: EdgeInsets.all(5),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.asset(
-                    gallery[index],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Center(
-                        child: Image.asset(
-                          "assets/images/images/emty.gif",
-                          fit: BoxFit.cover,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.white,
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLocationSection(PropertyDetailsModel property) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 15, top: 10),
-          child: Text(
-            "Location",
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-        ),
-        SizedBox(height: 10),
-        Row(
-          children: [
-            SizedBox(width: 15),
-            Image.asset(
-              "assets/images/images/Location.png",
-              height: 25,
-              width: 25,
-              fit: BoxFit.cover,
-              color: Color(0xff3D5BF6),
-            ),
-            SizedBox(width: 5),
-            Text(
-              property.city,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-        Container(
-          height: 200,
-          width: MediaQuery.of(context).size.width,
-          margin: EdgeInsets.all(10),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(
-                property.latitude,
-                 property.longtitude,
-                ),
-                zoom: 15.0,
-              ),
-              markers: Set<Marker>.of(_markers),
-              mapType: MapType.normal,
-              myLocationEnabled: true,
-              compassEnabled: true,
-              zoomGesturesEnabled: true,
-              tiltGesturesEnabled: true,
-              zoomControlsEnabled: true,
-              onMapCreated: (controller) {
-                setState(() {
-                  _mapController = controller;
-                });
-              },
-            ),
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                offset: const Offset(0.5, 0.5),
-                blurRadius: 2,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReviewsSection(List<ReviewModel> reviews, String totalReviews, String rate) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeaderWithSeeAll(
-          "★ $rate ($totalReviews reviews)",
-          "See All",
-              () {
-            // Navigate to reviews screen
-            // Get.toNamed(Routes.reviewScreen, arguments: {"reviews": reviews});
-          },
-          icon: Icon(Icons.star, color: Colors.yellow),
-        ),
-        ListView.builder(
-          itemCount: reviews.length > 2 ? 2 : reviews.length, // Show max 2 in preview
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          physics: NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            return ListTile(
-              leading: Container(
-                height: 60,
-                width: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    image: NetworkImage(reviews[index].userImg),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              title: Text(
-                reviews[index].userTitle,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
-                ),
-              ),
-              subtitle: Text(
-                reviews[index].userDesc,
-                textAlign: TextAlign.start,
-                maxLines: 2,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              trailing: Container(
-                height: 40,
-                width: 70,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.star, color: Colors.blue),
-                    SizedBox(width: 5),
-                    Text(
-                      reviews[index].userRate,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
-                    )
-                  ],
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.blue,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
+  // Widget _buildGallerySection(List<String> gallery) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       _buildSectionHeaderWithSeeAll(
+  //           "Gallery",
+  //           "See All",
+  //               () {
+  //             // Navigate to gallery screen
+  //             // Get.toNamed(Routes.galleryScreen, arguments: {
+  //             //   "gallery": gallery,
+  //             //   "propertyId": widget.propertyId,
+  //             // });
+  //           }
+  //       ),
+  //       Container(
+  //         height: 110,
+  //         alignment: Alignment.center,
+  //         margin: EdgeInsets.only(left: 15),
+  //         child: ListView.builder(
+  //           itemCount: gallery.length > 4 ? 4 : gallery.length, // Show max 4 in preview
+  //           scrollDirection: Axis.horizontal,
+  //           physics: BouncingScrollPhysics(),
+  //           itemBuilder: (context, index) {
+  //             return Container(
+  //               height: 110,
+  //               width: 110,
+  //               margin: EdgeInsets.all(5),
+  //               child: ClipRRect(
+  //                 borderRadius: BorderRadius.circular(10),
+  //                 child: Image.asset(
+  //                   gallery[index],
+  //                   fit: BoxFit.cover,
+  //                   errorBuilder: (context, error, stackTrace) {
+  //                     return Center(
+  //                       child: Image.asset(
+  //                         "assets/images/images/emty.gif",
+  //                         fit: BoxFit.cover,
+  //                       ),
+  //                     );
+  //                   },
+  //                 ),
+  //               ),
+  //               decoration: BoxDecoration(
+  //                 borderRadius: BorderRadius.circular(10),
+  //                 color: Colors.white,
+  //               ),
+  //             );
+  //           },
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+  //
+  // Widget _buildLocationSection(PropertyDetailsModel property) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Padding(
+  //         padding: const EdgeInsets.only(left: 15, top: 10),
+  //         child: Text(
+  //           "Location",
+  //           style: TextStyle(
+  //             fontSize: 17,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.black,
+  //           ),
+  //         ),
+  //       ),
+  //       SizedBox(height: 10),
+  //       Row(
+  //         children: [
+  //           SizedBox(width: 15),
+  //           Image.asset(
+  //             "assets/images/images/Location.png",
+  //             height: 25,
+  //             width: 25,
+  //             fit: BoxFit.cover,
+  //             color: Color(0xff3D5BF6),
+  //           ),
+  //           SizedBox(width: 5),
+  //           Text(
+  //             property.city,
+  //             style: TextStyle(
+  //               fontWeight: FontWeight.w500,
+  //               color: Colors.grey,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       Container(
+  //         height: 200,
+  //         width: MediaQuery.of(context).size.width,
+  //         margin: EdgeInsets.all(10),
+  //         child: ClipRRect(
+  //           borderRadius: BorderRadius.circular(15),
+  //           child: GoogleMap(
+  //             initialCameraPosition: CameraPosition(
+  //               target: LatLng(
+  //               property.latitude,
+  //                property.longtitude,
+  //               ),
+  //               zoom: 15.0,
+  //             ),
+  //             markers: Set<Marker>.of(_markers),
+  //             mapType: MapType.normal,
+  //             myLocationEnabled: true,
+  //             compassEnabled: true,
+  //             zoomGesturesEnabled: true,
+  //             tiltGesturesEnabled: true,
+  //             zoomControlsEnabled: true,
+  //             onMapCreated: (controller) {
+  //               setState(() {
+  //                 _mapController = controller;
+  //               });
+  //             },
+  //           ),
+  //         ),
+  //         decoration: BoxDecoration(
+  //           color: Colors.white,
+  //           borderRadius: BorderRadius.circular(15),
+  //           boxShadow: [
+  //             BoxShadow(
+  //               color: Colors.black12,
+  //               offset: const Offset(0.5, 0.5),
+  //               blurRadius: 2,
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
+  //
+  // Widget _buildReviewsSection(List<ReviewModel> reviews, String totalReviews, String rate) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       _buildSectionHeaderWithSeeAll(
+  //         "★ $rate ($totalReviews reviews)",
+  //         "See All",
+  //             () {
+  //           // Navigate to reviews screen
+  //           // Get.toNamed(Routes.reviewScreen, arguments: {"reviews": reviews});
+  //         },
+  //         icon: Icon(Icons.star, color: Colors.yellow),
+  //       ),
+  //       ListView.builder(
+  //         itemCount: reviews.length > 2 ? 2 : reviews.length, // Show max 2 in preview
+  //         shrinkWrap: true,
+  //         padding: EdgeInsets.zero,
+  //         physics: NeverScrollableScrollPhysics(),
+  //         itemBuilder: (context, index) {
+  //           return ListTile(
+  //             leading: Container(
+  //               height: 60,
+  //               width: 60,
+  //               decoration: BoxDecoration(
+  //                 shape: BoxShape.circle,
+  //                 image: DecorationImage(
+  //                   image: NetworkImage(reviews[index].userImg),
+  //                   fit: BoxFit.cover,
+  //                 ),
+  //               ),
+  //             ),
+  //             title: Text(
+  //               reviews[index].userTitle,
+  //               style: TextStyle(
+  //                 color: Colors.black,
+  //                 fontWeight: FontWeight.bold,
+  //                 fontSize: 17,
+  //               ),
+  //             ),
+  //             subtitle: Text(
+  //               reviews[index].userDesc,
+  //               textAlign: TextAlign.start,
+  //               maxLines: 2,
+  //               style: TextStyle(
+  //                 color: Colors.grey,
+  //                 fontWeight: FontWeight.w500,
+  //               ),
+  //             ),
+  //             trailing: Container(
+  //               height: 40,
+  //               width: 70,
+  //               child: Row(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   Icon(Icons.star, color: Colors.blue),
+  //                   SizedBox(width: 5),
+  //                   Text(
+  //                     reviews[index].userRate,
+  //                     style: TextStyle(
+  //                       fontWeight: FontWeight.bold,
+  //                       color: Colors.blue,
+  //                     ),
+  //                   )
+  //                 ],
+  //               ),
+  //               decoration: BoxDecoration(
+  //                 border: Border.all(
+  //                   color: Colors.blue,
+  //                   width: 2,
+  //                 ),
+  //                 borderRadius: BorderRadius.circular(20),
+  //               ),
+  //             ),
+  //           );
+  //         },
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildSectionHeaderWithSeeAll(String title, String buttonText, VoidCallback onPressed, {Icon? icon}) {
     return Row(
@@ -837,7 +840,7 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
     );
   }
 
-  Widget _buildBottomPriceBar(PropertyDetailsModel property) {
+  Widget _buildBottomPriceBar(DetailsProperty property) {
     return Positioned(
       bottom: 0,
       child: Container(
@@ -866,22 +869,13 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
                     child: Row(
                       children: [
                         Text(
-                          "\$${property.price}",
+                          "\$${property.dailyPrice}",
                           style: TextStyle(
                             color: Color(0xFF4772ff),
                             fontWeight: FontWeight.bold,
                             fontSize: 22,
                           ),
                         ),
-                        property.buyorrent == "1"
-                            ? Text(
-                          "/night",
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        )
-                            : Text(""),
                       ],
                     ),
                   ),
@@ -889,33 +883,8 @@ class _PropertyViewScreenState extends State<PropertyViewScreen> {
               ),
             ),
             Expanded(
-              child: property.buyorrent == "1"
-                  ? _buildActionButton(
+              child:  _buildActionButton(
                 "Book",
-                Color(0xFF4772ff),
-                    () {
-                  // Handle booking
-                  // if (user is logged in) {
-                  //   Get.toNamed(Routes.bookRealEstate);
-                  // } else {
-                  //   showToastMessage("Please login and Book");
-                  // }
-                },
-              )
-                  : property.isEnquiry == 1
-                  ? _buildActionButton(
-                "Contacted",
-                Colors.red,
-                    () {
-                  // Show toast message
-                  // Fluttertoast.showToast(
-                  //   msg: "Enquiry Already Send!!",
-                  //   backgroundColor: Colors.red,
-                  // );
-                },
-              )
-                  : _buildActionButton(
-                "Inquiry",
                 Color(0xFF4772ff),
                     () {
                   // Handle inquiry

@@ -4,6 +4,7 @@ import 'package:jre_app/base/bloc/base_bloc.dart';
 
 import '../../../data/lib/base/error_response.dart';
 import '../../../domain/model/home/Real_estate_ourReco_model.dart';
+import '../../../domain/model/home/details.dart' show DetailsProperty;
 import '../../../domain/model/home/filter_request.dart';
 import '../../../domain/model/home/proparty_model.dart';
 import '../../../domain/repositry/home/repositry_random.dart';
@@ -76,16 +77,24 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
   Future<void> _onDetailsList(PropertyDetailsLoaded event,
       Emitter<HomeState> emit) async {
     emit.call(state.copyWith(status: HomeStatus.loading,));
-    final Either<ErrorResponse, PropertyCategoryResponse> result =
+    final Either<ErrorResponse, DetailsProperty> result =
     await repository.getDetails(id: event.id);
     result.fold((error) {
       emit.call(state.copyWith(
           status: HomeStatus.error, errorMessage: error.message));
     }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccess,categoryProperties: data.data));
+      emit.call(state.copyWith(status: HomeStatus.apiSuccess,
+          detailsProperties: data));
     });
   }
-
+  // facility: [
+  // FacilityModel(title: "WiFi", img: "assets/images/images/wifi.png"),
+  // FacilityModel(title: "Pool", img: "assets/images/images/pool.png"),
+  // FacilityModel(title: "Gym", img: "assets/images/images/gym.png"),
+  // FacilityModel(title: "Parking", img: "assets/images/images/parking.png"),
+  // FacilityModel(title: "AC", img: "assets/images/images/ac.png"),
+  // FacilityModel(title: "Kitchen", img: "assets/images/images/kitchen.png"),
+  // ],
 
   Future<void> _onFilterSearch(FilterResult event,
       Emitter<HomeState> emit) async {
@@ -97,7 +106,7 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
       emit.call(state.copyWith(
           status: HomeStatus.error, errorMessage: error.message));
     }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccess,categoryProperties: data.data));
+      emit.call(state.copyWith(status: HomeStatus.apiSuccess,filteredProperties: data.data));
     });
   }
 }

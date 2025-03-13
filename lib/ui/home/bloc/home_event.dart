@@ -35,3 +35,17 @@ class FilterResult extends HomeEvent {
   RealEstateFilterRequest request;
   FilterResult(this.request);
 }
+
+// Property actions
+class ToggleFavoriteProperty extends HomeEvent {
+  final String propertyId;
+  final String propertyType;
+
+  ToggleFavoriteProperty({
+    required this.propertyId,
+    required this.propertyType,
+  });
+
+  @override
+  List<Object?> get props => [propertyId, propertyType];
+}
