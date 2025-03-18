@@ -13,14 +13,17 @@ import '../../../domain/repositry/home/repositry_random.dart';
 import '../../../theme/bloc/theme_bloc/theme_bloc.dart';
 import '../../../utils/Colors.dart';
 import '../../../utils/fontfamily_model.dart';
+import '../../Details/bloc/details_bloc.dart';
 import '../../Details/ui/property_deatils.dart';
+import '../../search/component/search_component.dart';
+import '../../search/search_bloc.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
 import '../component/dynamic_property.dart' show DynamicPropertyCard;
-import '../component/search_component.dart';
 import '../widget/department.dart';
 import '../widget/filter_page.dart';
+import '../widget/shimmer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -49,8 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
       ),
       builder: (context) =>
-          BlocProvider<HomeBloc>(
-            create: (context) => HomeBloc(repository),
+          BlocProvider<SearchBloc>(
+            create: (context) => SearchBloc(repository),
             child:  SearchBottomSheet(),
           ),
     );
@@ -349,19 +352,37 @@ class _HomeScreenState extends State<HomeScreen> {
   //   }
   // }
 
-  void _onFilterSelected(String filterName, Map<String, dynamic> filterData) {
+  void _onFilterSelected(String filterName, Map<String, dynamic> filterData,state) {
     setState(() {
       selectedFilter = filterName;
+      context.read<HomeBloc>().add(CategoryDetailsLoaded(id: filterData['id']),
+      );
       // Use the filter data directly from the callback
-      _navigateToFilteredPage(filterData);
+      _navigateToFilteredPage(filterData,state);
     });
   }
 
-  void _navigateToFilteredPage(Map<String, dynamic> filterData) {
+  void _navigateToFilteredPage(Map<String, dynamic> filterData,state) {
+    final appConfig = AppConfig();
+    final repository = RealEstateRepository(appConfig: appConfig);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider<HomeBloc>(
+          create: (context) => HomeBloc(repository),
+          child: CategoryList(
+            filterName: filterData['name']??'Chaleh',
+            filterType: filterData['id']??1,
+            properties: state.categoryProperties,
+          ),
+        ),
+      ),
+    );
+  }
+  void _navigateToDetails(Map<String, dynamic> filterData) {
     final state = context.read<HomeBloc>().state;
     final appConfig = AppConfig();
     final repository = RealEstateRepository(appConfig: appConfig);
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -376,22 +397,19 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  void _navigateToDetails(String id) {
+  void navigateToPropertyDetails(BuildContext context, String id) {
     final appConfig = AppConfig();
     final repository = RealEstateRepository(appConfig: appConfig);
-
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider<HomeBloc>(
-          create: (context) => HomeBloc(repository),
-          child: PropertyViewScreen(propertyId: int.parse(id)),
-        ),
-      ),
-    );
+        context,
+        MaterialPageRoute(
+          builder: (context) => BlocProvider<DetailsBloc>(
+            create: (context) => DetailsBloc(repository),
+            child: PropertyViewScreen(propertyId: int.parse(id),
+            ),
+          ),
+        ));
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -463,21 +481,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   userName != ""
                       ? const Text(
-                        "Manar",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontFamily: FontFamily.gilroyBold,
-                          fontSize: 18,
-                        ),
-                      )
+                    "Manar",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontFamily: FontFamily.gilroyBold,
+                      fontSize: 18,
+                    ),
+                  )
                       : AppCustomText(
-                        titleText: "User",
-                        style: const TextStyle(
-                          color: Colors.black12,
-                          fontFamily: FontFamily.gilroyBold,
-                          fontSize: 18,
-                        ),
-                      ),
+                    titleText: "User",
+                    style: const TextStyle(
+                      color: Colors.black12,
+                      fontFamily: FontFamily.gilroyBold,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -523,31 +541,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, state) {
-          return state.isLoading && state.featuredProperties.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : state.errorMessage != null && state.featuredProperties.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Error: ${state.errorMessage}',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed:
-                          () =>
-                              context.read<HomeBloc>().add(LoadHomeDataEvent()),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              )
-              : _buildHomeContent(state);
-        },
+      body:BlocConsumer<HomeBloc, HomeState>(
+          listener: (context, state) {
+            if(state.status==HomeStatus.loadingCategory){
+              const Center(child: CircularProgressIndicator());
+            }
+          },
+          builder: (context, state) {
+            return  _buildHomeContent(state);
+          }
       ),
     );
   }
@@ -581,13 +583,22 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           CategoryAndSeeAllWidget(name: "Featured".tr, buttonName: ""),
-          _buildPropertyList(state.featuredProperties),
+          _buildPropertyList(
+              context,
+              state.featuredProperties,
+              state.status == HomeStatus.loading
+          ),
+
           CategoryAndSeeAllWidget(
             name: "Our Recommendation".tr,
             buttonName: "",
           ),
           // Our recommendation section
-          _buildRecommendationList(state.recommendedProperties),
+          _buildRecommendationList(
+              context,
+              state.recommendedProperties,
+              state.status == HomeStatus.loading
+          ),
         ],
       ),
     );
@@ -626,9 +637,9 @@ class _HomeScreenState extends State<HomeScreen> {
             AppCustomText(
               titleText: "Search",
               style: TextStyle(
-                fontFamily: FontFamily.gilroyMedium,
-                color: fevAndSearchColor,
-                fontWeight: FontWeight.bold,fontSize: 16
+                  fontFamily: FontFamily.gilroyMedium,
+                  color: fevAndSearchColor,
+                  fontWeight: FontWeight.bold,fontSize: 16
               ),
             ),
           ],
@@ -636,368 +647,339 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+  Widget _buildPropertyList(BuildContext context, List<Property> properties, bool isLoading) {
+    if (isLoading) {
+      return const PropertyCardShimmer(isHorizontal: true);
+    }
+    return
+      properties.isNotEmpty?
+      SizedBox(
+        height: 320.h,
+        width: 620.w,
+        child: properties.isNotEmpty
+            ? ListView.builder(
+          itemCount: properties.length,
+          scrollDirection: Axis.horizontal,
+          shrinkWrap: true,
+          physics: const BouncingScrollPhysics(),
+          itemBuilder: (context, index) {
+            return _buildPropertyCard(context, properties[index]);
+          },
+        )
+            : _buildEmptyState(),
+      )
+          : _buildEmptyState();
+  }
+  Widget _buildPropertyCard(BuildContext context, Property property) {
+    final currency = "\$";
+    final facilities = [
+      "assets/images/images/beds.svg",
+      "assets/images/images/bath.svg",
+      "assets/images/images/sqft.svg",
+    ];
 
-  Widget _buildPropertyList(List<Property> properties) {
-    return SizedBox(
-      height: 320.h,
-      width: 600.w,
-      child:
-           ListView.builder(
-                itemCount: properties.length,
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                primary: true,
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, index1) {
-                  // currency =
-                  //     homePageController.homeDatatInfo?.homeData!.currency ?? "";
-                  return InkWell(
-                    onTap: () async {
-                      // setState(() {
-                      //   homePageController.rate = homePageController
-                      //       .homeDatatInfo
-                      //       ?.homeData
-                      //   !.featuredProperty![index1]
-                      //       .rate ??
-                      //       "";
-                      // });
-                      // print("IDDD ? >> >>> >>> >>> > ${homePageController.homeDatatInfo?.homeData!.featuredProperty![index1].id}");
-                      // homePageController.chnageObjectIndex(index1);
-                      // await homePageController.getPropertyDetailsApi(
-                      //     id: homePageController.homeDatatInfo?.homeData
-                      //     !.featuredProperty![index1].id);
-                      // Get.toNamed(
-                      //   Routes.viewDataScreen,
-                      // );
-                    },
-                    child: Container(
-                      height: 320.h,
-                      width: 240.w,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
+    return InkWell(
+      onTap: () => navigateToPropertyDetails(context,property.id),
+      child: Container(
+        height: 320.h,
+        width: 244.w,
+
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Stack(
+            children: [
+              // Property Image
+              SizedBox(
+                height: 320.h,
+                width: 240,
+                child: FutureBuilder<String>(
+                  future: AppConfig().imageUrl,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done &&
+                        snapshot.hasData) {
+                      return Image.network(
+                        "${snapshot.data}${property.mainImage}",
+                        fit: BoxFit.fill,
+                        height: 320.h,
+                        width: 240.w,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            height: 320.h,
+                            width: 240.w,
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 320,
+                            width: 240,
+                            color: Colors.grey[200],
+                            child: Icon(Icons.broken_image,
+                                size: 50, color: Colors.grey[400]),
+                          );
+                        },
+                      );
+                    } else {
+                      return Container(
+                        height: 320,
+                        width: 240,
+                        color: Colors.grey[200],
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                  },
+                ),
+              ),
+
+              // Gradient overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    stops: const [0.45, 0, 0],
+                    colors: [
+                      Colors.black.withOpacity(0.7),
+                      Colors.black.withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+
+              // Rating badge
+              Positioned(
+                top: 15,
+                right: 20,
+                child: Container(
+                  height: 30,
+                  width: 65,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFedeeef),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(0, 0, 3, 0),
+                        child: Image.asset(
+                          "assets/images/images/Rating.png",
+                          height: 15,
+                          width: 15,
+                        ),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
-                        child: Stack(
-                          children: [
-                            SizedBox(
-                              height: 320.h,
-                              width: 240,
-                                child: FutureBuilder<String>(
-                                  future: AppConfig().imageUrl,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.done &&
-                                        snapshot.hasData) {
-                                      return Image.network(
-                                        "${snapshot.data}${properties[index1]
-                                            .mainImage}",
-                                        fit: BoxFit.fill,
-                                        height: 320,
-                                        width: 240,
-                                        loadingBuilder: (context, child,
-                                            loadingProgress) {
-                                          if (loadingProgress == null)
-                                            return child;
-                                          return Container(
-                                            height: 320,
-                                            width: 240,
-                                            color: Colors.grey[200],
-                                            child: Center(
-                                              child: CircularProgressIndicator(
-                                                value: loadingProgress
-                                                    .expectedTotalBytes != null
-                                                    ? loadingProgress
-                                                    .cumulativeBytesLoaded /
-                                                    loadingProgress
-                                                        .expectedTotalBytes!
-                                                    : null,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        errorBuilder: (context, error,
-                                            stackTrace) {
-                                          return Container(
-                                            height: 320,
-                                            width: 240,
-                                            color: Colors.grey[200],
-                                            child: Icon(
-                                                Icons.broken_image, size: 50,
-                                                color: Colors.grey[400]),
-                                          );
-                                        },
-                                      );
-                                    } else {
-                                      return Container(
-                                        height: 320,
-                                        width: 240,
-                                        color: Colors.grey[200],
-                                        child: Center(
-                                            child: CircularProgressIndicator()),
-                                      );
-                                    }
-                                  },
-                                )
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  stops: [0.45, 0, 0],
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.black.withOpacity(0.5),
-                                    Colors.black.withOpacity(0.1),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              top: 15,
-                              right: 20,
-                              child: Container(
-                                height: 30,
-                                width: 65,
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFedeeef),
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      margin: const EdgeInsets.fromLTRB(
-                                        0,
-                                        0,
-                                        3,
-                                        0,
-                                      ),
-                                      child: Image.asset(
-                                        "assets/images/images/Rating.png",
-                                        height: 15,
-                                        width: 15,
-                                      ),
-                                    ),
-                                    Text(
-                                      "5",
-                                      //  "${properties![index1].rating.toInt() ?? ""}",
-                                      style: const TextStyle(
-                                        fontFamily: FontFamily.gilroyMedium,
-                                        color: Colors.blue,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                      const Text(
+                        "5",
+                        style: TextStyle(
+                          fontFamily: FontFamily.gilroyMedium,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-                            Positioned(
-                              bottom: 10,
-                              child: SizedBox(
-                                height: 136.h,
-                                width: 240.w,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(height: 10),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 12,
-                                        top: 10,
-                                      ),
-                                      child: Text(
-                                        properties![index1]?.nameEn ?? "",
-                                        maxLines: 1,
-                                        style: const TextStyle(
-                                          fontSize: 17,
-                                          fontFamily: FontFamily.gilroyBold,
-                                          color: Colors.white,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 3,
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          SvgPicture.asset(
-                                            "assets/images/images/location.svg",
-                                            height: 15,
-                                            colorFilter: const ColorFilter.mode(
-                                              Colors.white,
-                                              BlendMode.srcIn,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 2),
-                                          Text(
-                                            properties![index1].countryName ??
-                                                "",
-                                            maxLines: 1,
-                                            style: const TextStyle(
-                                              fontFamily:
-                                                  FontFamily.gilroyMedium,
-                                              color: Colors.white,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 3,
-                                      ),
-                                      child: SizedBox(
-                                        height: 13,
-                                        child: ListView.builder(
-                                          scrollDirection: Axis.horizontal,
-                                          itemCount: facilities.length,
-                                          itemBuilder: (context, index) {
-                                            return Row(
-                                              children: [
-                                                SvgPicture.asset(
-                                                  facilities[index],
-                                                  height: 12,
-                                                ),
-                                                const SizedBox(width: 5),
-                                                index == 0
-                                                    ? Text(
-                                                      //  ${properties![index1].beds}
-                                                      "3 Beds",
-                                                      style: const TextStyle(
-                                                        fontFamily:
-                                                            FontFamily
-                                                                .gilroyMedium,
-                                                        color: Colors.white,
-                                                        overflow:
-                                                            TextOverflow
-                                                                .ellipsis,
-                                                        fontSize: 12,
-                                                      ),
-                                                    )
-                                                    : index == 1
-                                                    ? Text(
-                                                      "2 Bath",
-                                                      style: const TextStyle(
-                                                        fontFamily:
-                                                            FontFamily
-                                                                .gilroyMedium,
-                                                        color: Colors.white,
-                                                        overflow:
-                                                            TextOverflow
-                                                                .ellipsis,
-                                                        fontSize: 12,
-                                                      ),
-                                                    )
-                                                    : Text(
-                                                      "${properties[index1].size} Sqft",
-                                                      style: const TextStyle(
-                                                        fontFamily:
-                                                            FontFamily
-                                                                .gilroyMedium,
-                                                        color: Colors.white,
-                                                        overflow:
-                                                            TextOverflow
-                                                                .ellipsis,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                const SizedBox(width: 8),
-                                              ],
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 10,
-                                          ),
-                                          child: Text(
-                                            "${currency}${properties![index1].dailyPrice}",
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontFamily: FontFamily.gilroyBold,
-                                              fontSize: 17,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+              // Property details
+              Positioned(
+                bottom: 10,
+                child: SizedBox(
+                  height: 141.h,
+                  width: 240.w,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+
+                      // Property name
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12, top: 10),
+                        child: Text(
+                          property.nameEn ?? "",
+                          maxLines: 1,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontFamily: FontFamily.gilroyBold,
+                            color: Colors.white,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+
+                      // Location
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 3,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(
+                              "assets/images/images/location.svg",
+                              height: 15,
+                              colorFilter: const ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              property.location ?? "",
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontFamily: FontFamily.gilroyMedium,
+                                color: Colors.white,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  );
-                },
-              )
-              : Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 5,
-                ),
-                child: Column(
-                  children: [
 
-                    const Image(
-                      image: AssetImage(
-                        "assets/images/images/searchDataEmpty.png",
-                      ),
-                      height: 110,
-                      width: 110,
-                    ),
-                    Center(
-                      child: SizedBox(
-                        width: 10 * 0.80,
-                        child: Text(
-                          "Sorry, there is no any nearby \n category or data not found"
-                              .tr,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: FontFamily.gilroyBold,
+                      // Facilities
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 3,
+                        ),
+                        child: SizedBox(
+                          height: 13,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: facilities.length,
+                            itemBuilder: (context, index) {
+                              return Row(
+                                children: [
+                                  SvgPicture.asset(
+                                    facilities[index],
+                                    height: 12,
+                                    colorFilter: const ColorFilter.mode(
+                                      Colors.white,
+                                      BlendMode.srcIn,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  index == 0
+                                      ? const Text(
+                                    "3 Beds",
+                                    style: TextStyle(
+                                      fontFamily: FontFamily.gilroyMedium,
+                                      color: Colors.white,
+                                      overflow: TextOverflow.ellipsis,
+                                      fontSize: 12,
+                                    ),
+                                  )
+                                      : index == 1
+                                      ? const Text(
+                                    "2 Bath",
+                                    style: TextStyle(
+                                      fontFamily: FontFamily.gilroyMedium,
+                                      color: Colors.white,
+                                      overflow: TextOverflow.ellipsis,
+                                      fontSize: 12,
+                                    ),
+                                  )
+                                      : Text(
+                                    "${property.size} Sqft",
+                                    style: const TextStyle(
+                                      fontFamily: FontFamily.gilroyMedium,
+                                      color: Colors.white,
+                                      overflow: TextOverflow.ellipsis,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),
-                    ),
-                  ],
+
+                      // Price
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            child: Text(
+                              "$currency${property.dailyPrice}",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: FontFamily.gilroyBold,
+                                fontSize: 17,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
     );
-    //   SizedBox(
-    //   height: 280,
-    //   child:
-    //       properties.isEmpty
-    //           ? const Center(child: Text('No properties available'))
-    //           : ListView.builder(
-    //             scrollDirection: Axis.horizontal,
-    //             itemCount: properties.length,
-    //             itemBuilder: (context, index) {
-    //               return PropertyCard(property: properties[index]);
-    //             },
-    //           ),
-    // );
   }
 
-  Widget _buildRecommendationList(properties) {
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 5,
+      ),
+      child: Column(
+        children: [
+          const Image(
+            image: AssetImage(
+              "assets/images/images/searchDataEmpty.png",
+            ),
+            height: 110,
+            width: 110,
+          ),
+          Center(
+            child: SizedBox(
+              width: 10 * 0.80,
+              child: Text(
+                "Sorry, there is no any nearby \n category or data not found".tr,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: FontFamily.gilroyBold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationList(BuildContext context, List<Property> properties, bool isLoading) {
+    if (isLoading) {
+      return const PropertyCardShimmer(isHorizontal: false);
+    }
+
     return ListView.builder(
       primary: true,
       shrinkWrap: true,
@@ -1022,705 +1004,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? '$baseUrl${p.mainImage}'
                 : '$baseUrl/default.jpg';
           },
-          //isFavoriteExtractor: (p) => p.isFavorite,
           propertyTypeExtractor: (p) => p.propertyType,
-          // onFavoriteToggle: _toggleFavorite,
-          onTap: (p) => _navigateToDetails(p.id),
+          onTap: (p) => navigateToPropertyDetails(context, p.id),
         );
       },
     );
-    //  // if (properties.isEmpty) {
-    //  //   return const SizedBox(
-    //  //     height: 200,
-    //  //     child: Center(child: Text('No recommendations available')),
-    //  //   );
-    //  // }
-    //  // // We'll just display the first property as a larger card
-    //  // final property = properties.first;
-    // return ListView.builder(
-    //    physics: const NeverScrollableScrollPhysics(),
-    //    shrinkWrap: true,
-    //    itemCount: property.length,
-    //    itemBuilder: (context, index) {
-    //      return PropertyListingCard(
-    //        property: property[index],
-    //      );
-    //    },
-    //  );
-    //  // return SizedBox(
-    //  //   height: 55,
-    //  //   child: Padding(
-    //  //     padding: const EdgeInsets.only(left: 10),
-    //  //     child: ListView.builder(
-    //  //       itemCount: properties.length,
-    //  //       scrollDirection: Axis.horizontal,
-    //  //       itemBuilder: (context, index) {
-    //  //         return InkWell(
-    //  //           onTap: () {
-    //  //             // homePageController
-    //  //             //     .changeCategoryIndex(index);
-    //  //             // homePageController.getCatWiseData(
-    //  //             //   cId: homePageController.homeDatatInfo
-    //  //             //       ?.homeData!.catlist![index].id,
-    //  //             //   countryId: getData.read("countryId"),
-    //  //             // );
-    //  //           },
-    //  //           child: Container(
-    //  //             height: 50,
-    //  //             padding: EdgeInsets.all(8),
-    //  //             margin: EdgeInsets.only(
-    //  //                 left: 5, right: 5, top: 7, bottom: 7),
-    //  //             child: Row(
-    //  //               mainAxisAlignment:
-    //  //               MainAxisAlignment.center,
-    //  //               children: [Image.asset(properties[index].imageUrl??''),
-    //  //                 SizedBox(
-    //  //                   width: 5,
-    //  //                 ),
-    //  //                 Text(
-    //  //                   properties[index]?.name ??
-    //  //                       "",
-    //  //                   style: TextStyle(
-    //  //                     fontFamily: FontFamily.gilroyBold,
-    //  //                     color: properties[index].beds ==
-    //  //                         index
-    //  //                         ? Colors.black
-    //  //                           : Colors.white,
-    //  //                   ),
-    //  //                 ),
-    //  //               ],
-    //  //             ),
-    //  //             decoration: BoxDecoration(
-    //  //               border: Border.all(
-    //  //                   color: Colors.blue, width: 2),
-    //  //               borderRadius: BorderRadius.circular(25),
-    //  //               // color:
-    //  //               // homePageController.catCurrentIndex == index ? blueColor : notifire.getbgcolor,
-    //  //             ),
-    //  //           ),
-    //  //         );
-    //  //       },
-    //  //     ),
-    //  //   ),
-    //  // );
-    //  // homePageController.isCatWise
-    //  // ? homePageController
-    //  //     .catWiseInfo!.propertyCat!.isNotEmpty
-    //  // ? Padding(
-    //  // padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-    //  // child: GridView.builder(
-    //  // itemCount: homePageController
-    //  //     .catWiseInfo?.propertyCat!.length,
-    //  // shrinkWrap: true,
-    //  // physics: NeverScrollableScrollPhysics(),
-    //  // gridDelegate:
-    //  // SliverGridDelegateWithFixedCrossAxisCount(
-    //  // crossAxisCount: 2,
-    //  // mainAxisExtent: 250,
-    //  // ),
-    //  // itemBuilder: (context, index) {
-    //  // return InkWell(
-    //  // onTap: () async {
-    //  // setState(() {
-    //  // homePageController.rate =
-    //  // homePageController
-    //  //     .catWiseInfo
-    //  //     ?.propertyCat![index]
-    //  //     .rate ??
-    //  // "";
-    //  // });
-    //  // homePageController
-    //  //     .chnageObjectIndex(index);
-    //  // await homePageController
-    //  //     .getPropertyDetailsApi(
-    //  // id: homePageController.catWiseInfo
-    //  //     ?.propertyCat![index].id,
-    //  // );
-    //  // Get.toNamed(Routes.viewDataScreen);
-    //  // },
-    //  // child: Container(
-    //  // height: 250,
-    //  // margin: EdgeInsets.all(8),
-    //  // child: Column(
-    //  // children: [
-    //  // Stack(
-    //  // children: [
-    //  // Container(
-    //  // height: 140,
-    //  // width: Get.size.width,
-    //  // margin: EdgeInsets.only(right: 8,left: 8,top: 8,),
-    //  // child: ClipRRect(
-    //  // borderRadius:
-    //  // BorderRadius.circular(
-    //  // 15),
-    //  // child: FadeInImage
-    //  //     .assetNetwork(
-    //  // fadeInCurve:
-    //  // Curves.easeInCirc,
-    //  // placeholder:
-    //  // "assets/images/ezgif.com-crop.gif",
-    //  // height: 130,
-    //  // width: Get.size.width,
-    //  // imageErrorBuilder: (context, error, stackTrace) {
-    //  // return Center(child: Image.asset("assets/images/emty.gif",fit: BoxFit.cover,height: Get.height,),);
-    //  // },
-    //  // image:
-    //  // "${Config.imageUrl}${homePageController.catWiseInfo?.propertyCat![index].image ?? ""}",
-    //  // fit: BoxFit.cover,
-    //  // ),
-    //  // ),
-    //  // ),
-    //  // homePageController
-    //  //     .catWiseInfo
-    //  //     ?.propertyCat![
-    //  // index]
-    //  //     .buyorrent ==
-    //  // "1"
-    //  // ? Positioned(
-    //  // top: 15,
-    //  // right: 20,
-    //  // child: Container(
-    //  // height: 30,
-    //  // width: 45,
-    //  // child: Row(
-    //  // mainAxisAlignment:
-    //  // MainAxisAlignment
-    //  //     .center,
-    //  // children: [
-    //  // Container(
-    //  // margin: const EdgeInsets
-    //  //     .fromLTRB(
-    //  // 0,
-    //  // 0,
-    //  // 3,
-    //  // 0),
-    //  // child: Image
-    //  //     .asset(
-    //  // "assets/images/Rating.png",
-    //  // height: 15,
-    //  // width: 15,
-    //  // ),
-    //  // ),
-    //  // Text(
-    //  // "${homePageController.catWiseInfo?.propertyCat![index].rate ?? ""}",
-    //  // style:
-    //  // TextStyle(
-    //  // fontFamily:
-    //  // FontFamily
-    //  //     .gilroyMedium,
-    //  // color:
-    //  // blueColor,
-    //  // ),
-    //  // )
-    //  // ],
-    //  // ),
-    //  // decoration:
-    //  // BoxDecoration(
-    //  // color: Color(
-    //  // 0xFFedeeef),
-    //  // borderRadius:
-    //  // BorderRadius
-    //  //     .circular(
-    //  // 15),
-    //  // ),
-    //  // ),
-    //  // )
-    //  //     : Positioned(
-    //  // top: 15,
-    //  // right: 20,
-    //  // child: Container(
-    //  // height: 30,
-    //  // width: 60,
-    //  // alignment: Alignment
-    //  //     .center,
-    //  // child: Text(
-    //  // "BUY".tr,
-    //  // style: TextStyle(
-    //  // color:
-    //  // blueColor,
-    //  // fontWeight:
-    //  // FontWeight
-    //  //     .w600),
-    //  // ),
-    //  // decoration:
-    //  // BoxDecoration(
-    //  // color: Color(
-    //  // 0xFFedeeef),
-    //  // borderRadius:
-    //  // BorderRadius
-    //  //     .circular(
-    //  // 15),
-    //  // ),
-    //  // ),
-    //  // ),
-    //  // ],
-    //  // ),
-    //  // Expanded(
-    //  // child: Container(
-    //  // height: 128,
-    //  // width: Get.size.width,
-    //  // margin: EdgeInsets.all(5),
-    //  // child: Column(
-    //  // crossAxisAlignment:
-    //  // CrossAxisAlignment
-    //  //     .start,
-    //  // children: [
-    //  // Padding(
-    //  // padding:
-    //  // const EdgeInsets
-    //  //     .only(left: 10),
-    //  // child: Text(
-    //  // homePageController
-    //  //     .catWiseInfo
-    //  //     ?.propertyCat![
-    //  // index]
-    //  //     .title ??
-    //  // "",
-    //  // maxLines: 1,
-    //  // style: TextStyle(
-    //  // fontSize: 17,
-    //  // fontFamily:
-    //  // FontFamily
-    //  //     .gilroyBold,
-    //  // color: notifire
-    //  //     .getwhiteblackcolor,
-    //  // overflow:
-    //  // TextOverflow
-    //  //     .ellipsis,
-    //  // ),
-    //  // ),
-    //  // ),
-    //  // Padding(
-    //  // padding:
-    //  // const EdgeInsets
-    //  //     .only(
-    //  // left: 10,
-    //  // top: 6),
-    //  // child: Row(
-    //  // children: [
-    //  // SvgPicture.asset("assets/images/location.svg",height: 16, colorFilter: ColorFilter.mode(notifire.getwhiteblackcolor, BlendMode.srcIn),),
-    //  // SizedBox(width: 2,),
-    //  // Flexible(
-    //  // child: Text(
-    //  // homePageController
-    //  //     .catWiseInfo
-    //  //     ?.propertyCat![
-    //  // index]
-    //  //     .city ??
-    //  // "",
-    //  // maxLines: 1,
-    //  // style: TextStyle(
-    //  // color: notifire
-    //  //     .getgreycolor,
-    //  // fontFamily: FontFamily
-    //  //     .gilroyMedium,
-    //  // overflow:
-    //  // TextOverflow
-    //  //     .ellipsis,
-    //  // ),
-    //  // ),
-    //  // ),
-    //  // ],
-    //  // ),
-    //  // ),
-    //  // Padding(
-    //  // padding:
-    //  // const EdgeInsets
-    //  //     .only(left: 10),
-    //  // child: Row(
-    //  // children: [
-    //  // Padding(
-    //  // padding:
-    //  // const EdgeInsets
-    //  //     .only(
-    //  // top: 7),
-    //  // child: Text(
-    //  // "${currency}${homePageController.catWiseInfo?.propertyCat![index].price ?? ""}",
-    //  // style:
-    //  // TextStyle(
-    //  // color: blueColor,
-    //  // fontFamily:
-    //  // FontFamily
-    //  //     .gilroyBold,
-    //  // fontSize: 17,
-    //  // ),
-    //  // ),
-    //  // ),
-    //  // homePageController
-    //  //     .catWiseInfo
-    //  //     ?.propertyCat![
-    //  // index]
-    //  //     .buyorrent ==
-    //  // "1"
-    //  // ? Padding(
-    //  // padding: const EdgeInsets
-    //  //     .only(
-    //  // left: 3,
-    //  // top: 7),
-    //  // child: Text(
-    //  // "/night"
-    //  //     .tr,
-    //  // style:
-    //  // TextStyle(
-    //  // color: notifire
-    //  //     .getgreycolor,
-    //  // fontFamily:
-    //  // FontFamily.gilroyMedium,
-    //  // ),
-    //  // ),
-    //  // )
-    //  //     : Text(""),
-    //  // ],
-    //  // ),
-    //  // )
-    //  // ],
-    //  // ),
-    //  // ),
-    //  // ),
-    //  // ],
-    //  // ),
-    //  // decoration: BoxDecoration(
-    //  // border: Border.all(
-    //  // color: notifire.getborderColor),
-    //  // borderRadius:
-    //  // BorderRadius.circular(15),
-    //  // color: notifire.getbgcolor,
-    //  // ),
-    //  // ),
-    //  // );
-    //  // },
-    //  // ),
-    //  // )
-    //  //     : Padding(
-    //  // padding: const EdgeInsets.symmetric(
-    //  // horizontal: 14, vertical: 5),
-    //  // child: Column(
-    //  // children: [
-    //  // SizedBox(height: Get.height * 0.10),
-    //  // Image(
-    //  // image: AssetImage(
-    //  // "assets/images/searchDataEmpty.png",
-    //  // ),
-    //  // height: 110,
-    //  // width: 110,
-    //  // ),
-    //  // Center(
-    //  // child: SizedBox(
-    //  // width: Get.width * 0.80,
-    //  // child: Text(
-    //  // "Sorry, there is no any nearby \n category or data not found"
-    //  //     .tr,
-    //  // textAlign: TextAlign.center,
-    //  // style: TextStyle(
-    //  // color: notifire.getgreycolor,
-    //  // fontFamily:
-    //  // FontFamily.gilroyBold,
-    //  // ),
-    //  // ),
-    //  // ),
-    //  // ),
-    //  // ],
-    //  // ),
-    //  // )
-    //  //     : Center(
-    //  // child: CircularProgressIndicator(),
-    //  // )
-    //  // return properties!.isNotEmpty
-    //  //     ? Padding(
-    //  //   padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-    //  //   child: GridView.builder(
-    //  //     itemCount: properties.length,
-    //  //     shrinkWrap: true,
-    //  //     physics: NeverScrollableScrollPhysics(),
-    //  //     gridDelegate:
-    //  //     SliverGridDelegateWithFixedCrossAxisCount(
-    //  //       crossAxisCount: 2,
-    //  //       mainAxisExtent: 250,
-    //  //     ),
-    //  //     itemBuilder: (context, index) {
-    //  //       return InkWell(
-    //  //         onTap: () async {
-    //  //           // setState(() {
-    //  //           //   // homePageController.rate =
-    //  //           //   //     homePageController
-    //  //           //   //         .catWiseInfo
-    //  //           //   //         ?.propertyCat![index]
-    //  //           //   //         .rate ??
-    //  //           //           "";
-    //  //           // });
-    //  //           // homePageController
-    //  //           //     .chnageObjectIndex(index);
-    //  //           // await homePageController
-    //  //           //     .getPropertyDetailsApi(
-    //  //           //   id: homePageController.catWiseInfo
-    //  //           //       ?.propertyCat![index].id,
-    //  //           // );
-    //  //           // Get.toNamed(Routes.viewDataScreen);
-    //  //         },
-    //  //         child: Container(
-    //  //           height: 250,width: 100,
-    //  //           margin: EdgeInsets.all(8),
-    //  //           decoration: BoxDecoration(
-    //  //             border: Border.all(
-    //  //                 color: Colors.white,),
-    //  //             borderRadius:
-    //  //             BorderRadius.circular(15),
-    //  //             color: Colors.white,
-    //  //           ),
-    //  //           child: Column(
-    //  //             children: [
-    //  //               Stack(
-    //  //                 children: [
-    //  //                   Container(
-    //  //                     height: 140,
-    //  //                     width: MediaQuery.of(context).size.width,
-    //  //                     margin: EdgeInsets.only(right: 8, left: 8, top: 8,),
-    //  //                     child: ClipRRect(
-    //  //                         borderRadius:
-    //  //                         BorderRadius.circular(
-    //  //                             15),
-    //  //                         child: Image.asset(properties[index].imageUrl ?? '',fit: BoxFit.cover,height: 140,
-    //  //                           width: MediaQuery.of(context).size.width,)
-    //  //                     ),
-    //  //                   ),
-    //  //                   properties[index]
-    //  //                       .rating !=
-    //  //                       "1"
-    //  //                       ? Positioned(
-    //  //                     top: 15,
-    //  //                     right: 20,
-    //  //                     child: Container(
-    //  //                       height: 30,
-    //  //                       width: 45,
-    //  //                       child: Row(
-    //  //                         mainAxisAlignment:
-    //  //                         MainAxisAlignment
-    //  //                             .center,
-    //  //                         children: [
-    //  //                           Container(
-    //  //                             margin: const EdgeInsets
-    //  //                                 .fromLTRB(
-    //  //                                 0,
-    //  //                                 0,
-    //  //                                 3,
-    //  //                                 0),
-    //  //                             child: Image
-    //  //                                 .asset(
-    //  //                               "assets/images/images/Rating.png",
-    //  //                               height: 15,
-    //  //                               width: 15,
-    //  //                             ),
-    //  //                           ),
-    //  //                           Text(
-    //  //                             "${properties[index]?.rating ?? ""}",
-    //  //                             style:
-    //  //                             TextStyle(
-    //  //                               fontFamily:
-    //  //                               FontFamily
-    //  //                                   .gilroyMedium,
-    //  //                               color:
-    //  //                               Colors.blue,
-    //  //                             ),
-    //  //                           )
-    //  //                         ],
-    //  //                       ),
-    //  //                       decoration:
-    //  //                       BoxDecoration(
-    //  //                         color: Color(
-    //  //                             0xFFedeeef),
-    //  //                         borderRadius:
-    //  //                         BorderRadius
-    //  //                             .circular(
-    //  //                             15),
-    //  //                       ),
-    //  //                     ),
-    //  //                   )
-    //  //                       : Positioned(
-    //  //                     top: 15,
-    //  //                     right: 20,
-    //  //                     child: Container(
-    //  //                       height: 30,
-    //  //                       width: 60,
-    //  //                       alignment: Alignment
-    //  //                           .center,
-    //  //                       child: Text(
-    //  //                         "BUY".tr,
-    //  //                         style: TextStyle(
-    //  //                             color:
-    //  //                             Colors.blue,
-    //  //                             fontWeight:
-    //  //                             FontWeight
-    //  //                                 .w600),
-    //  //                       ),
-    //  //                       decoration:
-    //  //                       BoxDecoration(
-    //  //                         color: Color(
-    //  //                             0xFFedeeef),
-    //  //                         borderRadius:
-    //  //                         BorderRadius
-    //  //                             .circular(
-    //  //                             15),
-    //  //                       ),
-    //  //                     ),
-    //  //                   ),
-    //  //                 ],
-    //  //               ),
-    //  //               Expanded(
-    //  //                 child: Container(
-    //  //                   height: 128,
-    //  //                   width:MediaQuery.of(context).size.width,
-    //  //                   margin: EdgeInsets.all(5),
-    //  //                   child: Column(
-    //  //                     crossAxisAlignment:
-    //  //                     CrossAxisAlignment
-    //  //                         .start,
-    //  //                     children: [
-    //  //                       Padding(
-    //  //                         padding:
-    //  //                         const EdgeInsets
-    //  //                             .only(left: 10),
-    //  //                         child: Text(
-    //  //                           properties[
-    //  //                           index]
-    //  //                               .name ??
-    //  //                               "",
-    //  //                           maxLines: 1,
-    //  //                           style: TextStyle(
-    //  //                             fontSize: 17,
-    //  //                             fontFamily:
-    //  //                             FontFamily
-    //  //                                 .gilroyBold,
-    //  //                             color: Colors.white,
-    //  //                             overflow:
-    //  //                             TextOverflow
-    //  //                                 .ellipsis,
-    //  //                           ),
-    //  //                         ),
-    //  //                       ),
-    //  //                       Padding(
-    //  //                         padding:
-    //  //                         const EdgeInsets
-    //  //                             .only(
-    //  //                             left: 10,
-    //  //                             top: 6),
-    //  //                         child: Row(
-    //  //                           children: [
-    //  //                             SvgPicture.asset(
-    //  //                               "assets/images/images/location.svg", height: 16,
-    //  //                               colorFilter: ColorFilter.mode(
-    //  //                                   Colors.white,
-    //  //                                   BlendMode.srcIn),),
-    //  //                             SizedBox(width: 2,),
-    //  //                             Flexible(
-    //  //                               child: Text(
-    //  //                                 properties[
-    //  //                                 index]
-    //  //                                     .country ??
-    //  //                                     "",
-    //  //                                 maxLines: 1,
-    //  //                                 style: TextStyle(
-    //  //                                   color: Colors.white,
-    //  //                                   fontFamily: FontFamily
-    //  //                                       .gilroyMedium,
-    //  //                                   overflow:
-    //  //                                   TextOverflow
-    //  //                                       .ellipsis,
-    //  //                                 ),
-    //  //                               ),
-    //  //                             ),
-    //  //                           ],
-    //  //                         ),
-    //  //                       ),
-    //  //                       Padding(
-    //  //                         padding:
-    //  //                         const EdgeInsets
-    //  //                             .only(left: 10),
-    //  //                         child: Row(
-    //  //                           children: [
-    //  //                             Padding(
-    //  //                               padding:
-    //  //                               const EdgeInsets
-    //  //                                   .only(
-    //  //                                   top: 7),
-    //  //                               child: Text(
-    //  //                                 "${currency}${properties![index].price ??
-    //  //                                     ""}",
-    //  //                                 style:
-    //  //                                 TextStyle(
-    //  //                                   color: Colors.blue,
-    //  //                                   fontFamily:
-    //  //                                   FontFamily
-    //  //                                       .gilroyBold,
-    //  //                                   fontSize: 17,
-    //  //                                 ),
-    //  //                               ),
-    //  //                             ),
-    //  //                             properties[
-    //  //                             index]
-    //  //                                 .rating ==
-    //  //                                 "1"
-    //  //                                 ? Padding(
-    //  //                               padding: const EdgeInsets
-    //  //                                   .only(
-    //  //                                   left: 3,
-    //  //                                   top: 7),
-    //  //                               child: Text(
-    //  //                                 "/night"
-    //  //                                     .tr,
-    //  //                                 style:
-    //  //                                 TextStyle(
-    //  //                                   color: Colors.grey,
-    //  //                                   fontFamily:
-    //  //                                   FontFamily.gilroyMedium,
-    //  //                                 ),
-    //  //                               ),
-    //  //                             )
-    //  //                                 : Text(""),
-    //  //                           ],
-    //  //                         ),
-    //  //                       )
-    //  //                     ],
-    //  //                   ),
-    //  //                 ),
-    //  //               ),
-    //  //             ],
-    //  //           ),
-    //  //         ),
-    //  //       );
-    //  //     },
-    //  //   ),
-    //  // )
-    //  //     :Container();
-    //  //     : Padding(
-    //  //   padding: const EdgeInsets.symmetric(
-    //  //       horizontal: 14, vertical: 5),
-    //  //   child: Column(
-    //  //     children: [
-    //  //       SizedBox(height: Get.height * 0.10),
-    //  //       Image(
-    //  //         image: AssetImage(
-    //  //           "assets/images/searchDataEmpty.png",
-    //  //         ),
-    //  //         height: 110,
-    //  //         width: 110,
-    //  //       ),
-    //  //       Center(
-    //  //         child: SizedBox(
-    //  //           width: Get.width * 0.80,
-    //  //           child: Text(
-    //  //             "Sorry, there is no any nearby \n category or data not found"
-    //  //                 .tr,
-    //  //             textAlign: TextAlign.center,
-    //  //             style: TextStyle(
-    //  //               color: notifire.getgreycolor,
-    //  //               fontFamily:
-    //  //               FontFamily.gilroyBold,
-    //  //             ),
-    //  //           ),
-    //  //         ),
-    //  //       ),
-    //  //     ],
-    //  //   ),
-    //  // )
   }
 }

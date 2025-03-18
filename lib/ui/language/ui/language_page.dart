@@ -32,7 +32,7 @@ class LanguageScreen extends StatelessWidget {
               children: [
                 30.verticalSpace,
                 AppCustomText(
-                  titleText: appLocalizations.translate('CHOOSE_LANG'),
+                  titleText: 'CHOOSE_LANG',
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 20,
@@ -41,7 +41,7 @@ class LanguageScreen extends StatelessWidget {
                 ),
                 12.verticalSpace,
                 AppCustomText(
-                  titleText: appLocalizations.translate('DESC_LANG'),
+                  titleText: 'DESC_LANG',
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 20,

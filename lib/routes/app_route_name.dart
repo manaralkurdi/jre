@@ -7,8 +7,9 @@ class AppRoutes {
   static const String CHANGE_LANGUAGE = '/language';
   static const String BottoBarScreen = '/BottoBarScreen';
   static const String SEARCH = '/SEARCH';
-  static const String categoryList = '/categoryList';
-
+  static const String propertyFilter = '/property-filter';
+  static const String categoryDetails = '/category-details';
+  static const String categoryList = '/category-list';
   // Authentication routes
   static const String LOGIN = '/login';
   static const String REGISTER = '/register';

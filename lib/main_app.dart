@@ -36,15 +36,7 @@ class MyApp extends StatelessWidget {
               themeMode: themeState.themeMode,
               theme: ThemeData.light(useMaterial3: false).copyWith(
                 primaryColor: const Color(0xff3D5BF6),
-                splashColor: Colors.transparent,
-                hoverColor: Colors.transparent,
-                highlightColor: Colors.transparent,
-                dividerColor: Colors.transparent,
-                     //     fontFamily: "Gilroy",
-              ),
-              darkTheme: ThemeData.dark(useMaterial3: false).copyWith(
-                primaryColor: const Color(0xff3D5BF6),
-                splashColor: Colors.transparent,
+                splashColor: Colors.grey[50],
                 hoverColor: Colors.transparent,
                 highlightColor: Colors.transparent,
                 dividerColor: Colors.transparent,

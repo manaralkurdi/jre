@@ -4,11 +4,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:jre_app/base/component/app_custom_text.dart';
 import 'package:jre_app/domain/model/home/filter_request.dart';
-import 'package:jre_app/ui/home/bloc/home_bloc.dart';
-import 'package:jre_app/ui/home/bloc/home_event.dart';
+import 'package:jre_app/ui/search/search_event.dart';
 
-import '../../../routes/app_route_name.dart' show AppRoutes;
-import '../bloc/home_state.dart';
+
+import '../../../../routes/app_route_name.dart';
+import '../search_bloc.dart';
+import '../search_state.dart';
 
 class SearchBottomSheet extends StatefulWidget {
   @override
@@ -105,21 +106,43 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
 
     _filterRequest.setPeopleCount(guests);
     _filterRequest.setRoomsCount(rooms);
+
+    // Set check-in and check-out dates if your filter request supports it
+    // _filterRequest.setCheckInDate(checkInDate);
+    // _filterRequest.setCheckOutDate(checkOutDate);
   }
 
   @override
   Widget build(BuildContext context) {
     final isRtl = Localizations.localeOf(context).languageCode == 'ar';
 
-    return BlocConsumer<HomeBloc, HomeState>(
-        listener: (context, state) {},
+    return BlocConsumer<SearchBloc, SearchState>(
+        listener: (context, state) {
+          if(state.status == SearchStatus.SearchSuccsess) {
+            Navigator.of(context).pop();
+            // Navigate to search results page with results
+            Navigator.of(context).pushNamed(
+              AppRoutes.SEARCH,
+              arguments: state.filteredProperties,
+            );
+            print('Search results: ${state.filteredProperties}');
+          } else if(state.status == SearchStatus.error) {
+            // Show error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage ?? 'Error searching')),
+            );
+            Navigator.of(context).pop();
+            // Navigate to search results page with results
+            Navigator.of(context).pushNamed(
+              AppRoutes.SEARCH,
+              arguments: [],
+            );
+          }
+        },
         builder: (context, state) {
           return Container(
             padding: EdgeInsets.all(20),
-            height: MediaQuery
-                .of(context)
-                .size
-                .height * 0.70,
+            height: MediaQuery.of(context).size.height * 0.70,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -154,12 +177,10 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment
-                                    .spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    DateFormat('dd/MM/yyyy').format(
-                                        checkInDate),
+                                    DateFormat('dd/MM/yyyy').format(checkInDate),
                                     style: TextStyle(fontSize: 16),
                                   ),
                                   Icon(Icons.calendar_today, size: 20),
@@ -193,12 +214,10 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment
-                                    .spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    DateFormat('dd/MM/yyyy').format(
-                                        checkOutDate),
+                                    DateFormat('dd/MM/yyyy').format(checkOutDate),
                                     style: TextStyle(fontSize: 16),
                                   ),
                                   Icon(Icons.calendar_today, size: 20),
@@ -243,18 +262,16 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                                   style: TextStyle(fontSize: 14),
                                 ),
                                 value: _selectedCountry,
-                                items:
-                              _countryAreas.keys.map((String country) {
-                                return DropdownMenuItem<String>(
-                                  value: country,
-                                  child: AppCustomText(titleText: country),
-                                );
-                              }).toList(),
+                                items: _countryAreas.keys.map((String country) {
+                                  return DropdownMenuItem<String>(
+                                    value: country,
+                                    child: AppCustomText(titleText: country),
+                                  );
+                                }).toList(),
                                 onChanged: (String? newValue) {
                                   setState(() {
                                     _selectedCountry = newValue;
-                                    _selectedArea =
-                                    null; // Reset area when country changes
+                                    _selectedArea = null; // Reset area when country changes
                                   });
                                 },
                               ),
@@ -293,17 +310,16 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                                   style: TextStyle(fontSize: 14),
                                 ),
                                 value: _selectedArea,
-                                items:
-                              _selectedCountry == null
-                                  ? []
-                                  : _countryAreas[_selectedCountry]!.map((
-                                  String area,
-                                  ) {
-                                return DropdownMenuItem<String>(
-                                  value: area,
-                                  child: AppCustomText(titleText: area),
-                                );
-                              }).toList(),
+                                items: _selectedCountry == null
+                                    ? []
+                                    : _countryAreas[_selectedCountry]!.map(
+                                      (String area) {
+                                    return DropdownMenuItem<String>(
+                                      value: area,
+                                      child: AppCustomText(titleText: area),
+                                    );
+                                  },
+                                ).toList(),
                                 onChanged: (String? newValue) {
                                   setState(() {
                                     _selectedArea = newValue;
@@ -335,8 +351,7 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                           padding: EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
-                            side: BorderSide(
-                                color: Colors.grey.withOpacity(0.3)),
+                            side: BorderSide(color: Colors.grey.withOpacity(0.3)),
                           ),
                         ),
                         child: AppCustomText(titleText: ('cancel')),
@@ -345,17 +360,12 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                     SizedBox(width: 15),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Update filter request with current values
+                        onPressed: state.isLoading
+                            ? null  // Disable button when loading
+                            : () {
                           _updateFilterRequest();
-                          // Dispatch the filter event to HomeBloc
-                          context.read<HomeBloc>().add(
-                            FilterResult(_filterRequest),
-                          );
-                          // Close the bottom sheet and navigate to the search page
-                          Navigator.pop(context);
-                          Navigator.of(context).pushReplacementNamed(
-                              AppRoutes.SEARCH);
+                          // Dispatch the submit search event to SearchBloc
+                          context.read<SearchBloc>().add(FilterResult(_filterRequest));
                         },
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 15),
@@ -363,7 +373,16 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        child: AppCustomText(titleText: ('confirm')),
+                        child: state!.isLoading
+                            ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                            : AppCustomText(titleText: ('confirm')),
                       ),
                     ),
                   ],
@@ -374,7 +393,6 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
         }
     );
   }
-
 
   Widget _buildCounterField(String title, int value, Function(int) onChanged) {
     // Check if UI is in RTL mode for Arabic

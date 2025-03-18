@@ -4,11 +4,11 @@ import '../../../domain/model/home/Real_estate_ourReco_model.dart';
 import '../../../domain/model/home/details.dart';
 import '../../../domain/model/home/proparty_model.dart';
 
-enum HomeStatus { initial, loading, loadingCategory,loaded, error,allDataLoaded,
+enum SearchStatus { initial, loading, loaded, error,allDataLoaded,
   apiSuccessFeatured,SearchSuccsess,apiSuccessRandom,apiSuccessDetails,apiSuccessCategoryDeatils }
 
-class HomeState extends BaseState {
-  final HomeStatus status;
+class SearchState extends BaseState {
+  final SearchStatus status;
 
   final bool isLoading;
   final List<Property> featuredProperties;
@@ -19,7 +19,7 @@ class HomeState extends BaseState {
   final String selectedPropertyType;
   final String? errorMessage;
 
-  HomeState({
+  SearchState({
     required this.status,
     this.isLoading = false,
     this.featuredProperties = const [],
@@ -30,16 +30,16 @@ class HomeState extends BaseState {
     this.selectedPropertyType = 'All',
     this.errorMessage,
   });
-  factory HomeState.initial() =>  HomeState(
-    status: HomeStatus.initial,
+  factory SearchState.initial() =>  SearchState(
+    status: SearchStatus.initial,
     featuredProperties: [],
     recommendedProperties: [],
     filteredProperties: [],
     selectedPropertyType: 'All',categoryProperties: [],detailsProperties:DetailsProperty(),
     errorMessage: null,
   );
-  HomeState copyWith({
-    HomeStatus? status,
+  SearchState copyWith({
+    SearchStatus? status,
 
     bool? isLoading,
     List<Property>? featuredProperties,
@@ -50,7 +50,7 @@ class HomeState extends BaseState {
     String? selectedPropertyType,
     String? errorMessage,
   }) {
-    return HomeState(
+    return SearchState(
       status: status ?? this.status,
       isLoading: isLoading ?? this.isLoading,
       featuredProperties: featuredProperties ?? this.featuredProperties,

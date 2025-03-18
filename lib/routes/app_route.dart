@@ -3,12 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jre_app/data/lib/base/app_config.dart';
 import 'package:jre_app/domain/repositry/home/repositry_random.dart';
 import 'package:jre_app/not_fond_screen.dart' show NotFoundScreen;
-import 'package:jre_app/ui/home/widget/Search_page.dart';
+import 'package:jre_app/ui/category/bloc/category_bloc.dart';
 
+import '../domain/model/home/proparty_model.dart';
 import '../ui/home/bloc/home_bloc.dart';
 import '../ui/home/bottombar_screen.dart';
 import '../ui/home/ui/home_page.dart';
+import '../ui/home/widget/department.dart';
 import '../ui/language/ui/language_page.dart';
+import '../ui/search/search_bloc.dart';
+import '../ui/search/ui/Search_page.dart';
 import '../ui/splash/ui/splash_screen.dart';
 import 'app_route_name.dart';
 final appConfig = AppConfig();
@@ -39,19 +43,16 @@ class AppRouter {
                 child: const HomeScreen(),
               ),
         );
-        case AppRoutes.SEARCH:
+      case AppRoutes.SEARCH:
+        final searchResults = settings.arguments as List<PropertyDataCategory>;
         return MaterialPageRoute(
-          builder:
-              (_) => BlocProvider<HomeBloc>(
-                create: (context) => HomeBloc(repository),
-                child:  SearchPage()
+          builder: (context) =>
+              BlocProvider<SearchBloc>(
+                create: (context) => SearchBloc(repository),
+                child:SearchPage(properties: searchResults),
               ),
+
         );
-      //
-      // case AppRoutes.LOGIN:
-      //   return MaterialPageRoute(
-      //     builder: (_) => const LoginScreen(),
-      //   );
 
       default:
         // Handle unknown routes

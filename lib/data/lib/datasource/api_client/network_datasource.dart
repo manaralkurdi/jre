@@ -77,8 +77,8 @@ class NetworkDatasource implements NetworkDatasourceType {
 
   Future<http.Response> _handleMultipartRequest(
       String url,
-      AppMultiPartRequest multiPart,
-      Map<String, String>? headers,
+      AppMultiPartRequest multiPart,      Map<String, String>? headers,
+
       String method,
       String apiPath,
       ) async {

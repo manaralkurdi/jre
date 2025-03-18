@@ -12,11 +12,11 @@ import 'package:readmore/readmore.dart';
 import 'package:shimmer/shimmer.dart'; // Import the shimmer package
 
 import '../../../domain/model/home/details.dart';
+import '../../Details/bloc/details_bloc.dart';
+import '../../Details/bloc/details_event.dart';
+import '../../Details/bloc/details_state.dart';
 import '../../home/bloc/home_event.dart';
-
-import '../bloc/details_bloc.dart';
-import '../bloc/details_event.dart';
-import '../bloc/details_state.dart';
+import '../bloc/category_event.dart';
 
 class PropertyViewScreen extends StatefulWidget {
   final int propertyId;

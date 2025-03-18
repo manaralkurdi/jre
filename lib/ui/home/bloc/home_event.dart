@@ -6,11 +6,6 @@ abstract class HomeEvent extends BaseEvent {}
 
 class LoadHomeDataEvent extends HomeEvent {}
 
-class FilterPropertiesEvent extends HomeEvent {
-  final String propertyType;
-
-  FilterPropertiesEvent(this.propertyType);
-}
 
 class RealEstateRandomLoaded extends HomeEvent {
   RealEstateRandomLoaded();
@@ -26,15 +21,6 @@ class CategoryDetailsLoaded extends HomeEvent {
   CategoryDetailsLoaded({this.id});
 }
 
-class PropertyDetailsLoaded extends HomeEvent {
-  int? id;
-
-  PropertyDetailsLoaded({this.id});
-}
-class FilterResult extends HomeEvent {
-  RealEstateFilterRequest request;
-  FilterResult(this.request);
-}
 
 // Property actions
 class ToggleFavoriteProperty extends HomeEvent {

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart' show BlocConsumer, BlocProvider;
 import '../../../data/lib/base/app_config.dart';
 import '../../../domain/model/home/proparty_model.dart';
 import '../../../domain/repositry/home/repositry_random.dart';
+import '../../Details/bloc/details_bloc.dart';
 import '../../Details/ui/property_deatils.dart';
 import '../bloc/home_bloc.dart' show HomeBloc;
 import '../bloc/home_state.dart';
@@ -28,12 +29,13 @@ class CategoryList extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BlocProvider<HomeBloc>(
-          create: (context) => HomeBloc(repository),
-          child: PropertyViewScreen(
-            propertyId: int.tryParse(property.id.toString()) ?? 0,
-          ),
-        ),
+        builder: (context) =>
+            BlocProvider<DetailsBloc>(
+              create: (context) => DetailsBloc(repository),
+              child: PropertyViewScreen(
+                propertyId: int.tryParse(property.id.toString()) ?? 0,
+              ),
+            ),
       ),
     );
   }
@@ -55,6 +57,9 @@ class CategoryList extends StatelessWidget {
                 backgroundColor: Colors.red,
               ),
             );
+          }
+          if (state.status == HomeStatus.loadingCategory) {
+            const Center(child: CircularProgressIndicator());
           }
         },
         builder: (context, state) {
@@ -83,9 +88,8 @@ class CategoryList extends StatelessWidget {
       ) {
     // Show loading indicator if state is loading
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return CircularProgressIndicator();
     }
-
     return _buildPropertyList(context, filteredProperties);
   }
 

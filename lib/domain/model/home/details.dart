@@ -1,4 +1,28 @@
 class DetailsProperty {
+  final String ?status;
+  final PropertyData ? data;
+
+  DetailsProperty({
+     this.status,
+     this.data,
+  });
+
+  factory DetailsProperty.fromJson(Map<String, dynamic> json) {
+    return DetailsProperty(
+      status: json['status'] ?? '',
+      data: PropertyData.fromJson(json['data'] ?? {}),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'status': status,
+      'data': data?.toJson(),
+    };
+  }
+}
+
+class PropertyData {
   final String? id;
   final String? name;
   final String? nameEn;
@@ -17,18 +41,17 @@ class DetailsProperty {
   final String? checkOut;
   final String? bookingSetting;
   final String? mainImage;
-  final bool isFeatured;
+  final String? isFeatured;
   final String? createdAt;
   final String? updatedAt;
   final String? countryName;
   final String? regionName;
-  final int? isFavourite;
-  final List<String> additions;
-  final List<String> paymentMethods;
-  final List<List<String>> bookings;
-  final List<String> additionalImages;
+  final List<String>? additions;
+  final List<String>? paymentMethods;
+  final List<List<String>>? bookings;
+  final List<String>? additionalImages;
 
-  DetailsProperty({
+  PropertyData({
     this.id,
     this.name,
     this.nameEn,
@@ -47,150 +70,82 @@ class DetailsProperty {
     this.checkOut,
     this.bookingSetting,
     this.mainImage,
-    this.isFeatured = false,
+    this.isFeatured,
     this.createdAt,
     this.updatedAt,
     this.countryName,
-    this.isFavourite=0,
     this.regionName,
-    this.additions = const [],
-    this.paymentMethods = const [],
-    this.bookings = const [],
-    this.additionalImages = const [],
+    this.additions,
+    this.paymentMethods,
+    this.bookings,
+    this.additionalImages,
   });
 
-  // Helper methods
-  String getFormattedPrice() {
-    if (dailyPrice == null || dailyPrice!.isEmpty) {
-      return '0.00';
-    }
-    try {
-      return double.parse(dailyPrice!).toStringAsFixed(2);
-    } catch (e) {
-      return '0.00';
-    }
-  }
-
-  String getFullAddress() {
-    final region = regionName ?? '';
-    final loc = location ?? '';
-    final country = countryName ?? '';
-
-    return [region, loc, country]
-        .where((element) => element.isNotEmpty)
-        .join(', ');
-  }
-
-  String getMainImageUrl({String? baseUrl}) {
-    if (mainImage == null || mainImage!.isEmpty) {
-      return '';
-    }
-    final base = baseUrl ?? '';
-    return '$base/$mainImage';
-  }
-
-  bool isFeaturedProperty() {
-    return isFeatured;
-  }
-
-  int getCapacity() {
-    if (peopleCount == null || peopleCount!.isEmpty) {
-      return 0;
-    }
-    try {
-      return int.parse(peopleCount!);
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  // Factory constructor to create a DetailsProperty from a JSON map
-  factory DetailsProperty.fromJson(Map<String, dynamic> json) {
-    return DetailsProperty(
-      id: json['id'],
-      name: json['name'],
-      nameEn: json['name_en'],
-      propertyType: json['property_type'],
-      size: json['size'],
-      location: json['location'],
-      countryId: json['country_id'],
-      regionId: json['region_id'],
-      propertyMap: json['property_map'],
-      description: json['description'],
-      descriptionEn: json['description_en'],
-      peopleCount: json['people_count'],
-      roomsCount: json['rooms_count'],
-      dailyPrice: json['daily_price'],
-      checkIn: json['check_in'],
-      checkOut: json['check_out'],
-      bookingSetting: json['booking_setting'],
-      mainImage: json['main_image'],
-      isFeatured: json['is_featured'] == '1',
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
-      countryName: json['country_name'],
-      regionName: json['region_name'],
-      isFavourite: json['isFavourite'],
-      additions: _parseStringList(json['additions']),
-      paymentMethods: _parseStringList(json['payment_methods']),
-      bookings: _parseNestedStringList(json['bookings']),
-      additionalImages: _parseStringList(json['additional_images']),
+  factory PropertyData.fromJson(Map<String, dynamic> json) {
+    return PropertyData(
+      id: json['id']?.toString(),
+      name: json['name']?.toString(),
+      nameEn: json['name_en']?.toString(),
+      propertyType: json['property_type']?.toString(),
+      size: json['size']?.toString(),
+      location: json['location']?.toString(),
+      countryId: json['country_id']?.toString(),
+      regionId: json['region_id']?.toString(),
+      propertyMap: json['property_map']?.toString(),
+      description: json['description']?.toString(),
+      descriptionEn: json['description_en']?.toString(),
+      peopleCount: json['people_count']?.toString(),
+      roomsCount: json['rooms_count']?.toString(),
+      dailyPrice: json['daily_price']?.toString(),
+      checkIn: json['check_in']?.toString(),
+      checkOut: json['check_out']?.toString(),
+      bookingSetting: json['booking_setting']?.toString(),
+      mainImage: json['main_image']?.toString(),
+      isFeatured: json['is_featured']?.toString(),
+      createdAt: json['created_at']?.toString(),
+      updatedAt: json['updated_at']?.toString(),
+      countryName: json['country_name']?.toString(),
+      regionName: json['region_name']?.toString(),
+      additions: json['additions'] != null ? List<String>.from(json['additions']) : null,
+      paymentMethods: json['payment_methods'] != null ? List<String>.from(json['payment_methods']) : null,
+      bookings: json['bookings'] != null ? (json['bookings'] as List<dynamic>)
+          .map((booking) => List<String>.from(booking ?? []))
+          .toList() : null,
+      additionalImages: json['additional_images'] != null ? List<String>.from(json['additional_images']) : null,
     );
   }
 
-  // Helper method to convert the DetailsProperty to a JSON map
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'name_en': nameEn,
-      'property_type': propertyType,
-      'size': size,
-      'location': location,
-      'country_id': countryId,
-      'region_id': regionId,
-      'property_map': propertyMap,
-      'description': description,
-      'description_en': descriptionEn,
-      'people_count': peopleCount,
-      'rooms_count': roomsCount,
-      'daily_price': dailyPrice,
-      'check_in': checkIn,
-      'check_out': checkOut,
-      'booking_setting': bookingSetting,
-      'main_image': mainImage,
-      'is_featured': isFeatured ? '1' : '0',
-      'created_at': createdAt,
-      'updated_at': updatedAt,
-      'country_name': countryName,
-      'region_name': regionName,
-      'additions': additions,
-      'payment_methods': paymentMethods,
-      'bookings': bookings,
-      'additional_images': additionalImages,
-      'isFavourite': isFavourite,
-    };
-  }
+    final Map<String, dynamic> data = {};
 
-  // Private helper methods for parsing lists
-  static List<String> _parseStringList(dynamic list) {
-    if (list == null) return [];
-    if (list is List) {
-      return list.map((item) => item.toString()).toList();
-    }
-    return [];
-  }
+    if (id != null) data['id'] = id;
+    if (name != null) data['name'] = name;
+    if (nameEn != null) data['name_en'] = nameEn;
+    if (propertyType != null) data['property_type'] = propertyType;
+    if (size != null) data['size'] = size;
+    if (location != null) data['location'] = location;
+    if (countryId != null) data['country_id'] = countryId;
+    if (regionId != null) data['region_id'] = regionId;
+    if (propertyMap != null) data['property_map'] = propertyMap;
+    if (description != null) data['description'] = description;
+    if (descriptionEn != null) data['description_en'] = descriptionEn;
+    if (peopleCount != null) data['people_count'] = peopleCount;
+    if (roomsCount != null) data['rooms_count'] = roomsCount;
+    if (dailyPrice != null) data['daily_price'] = dailyPrice;
+    if (checkIn != null) data['check_in'] = checkIn;
+    if (checkOut != null) data['check_out'] = checkOut;
+    if (bookingSetting != null) data['booking_setting'] = bookingSetting;
+    if (mainImage != null) data['main_image'] = mainImage;
+    if (isFeatured != null) data['is_featured'] = isFeatured;
+    if (createdAt != null) data['created_at'] = createdAt;
+    if (updatedAt != null) data['updated_at'] = updatedAt;
+    if (countryName != null) data['country_name'] = countryName;
+    if (regionName != null) data['region_name'] = regionName;
+    if (additions != null) data['additions'] = additions;
+    if (paymentMethods != null) data['payment_methods'] = paymentMethods;
+    if (bookings != null) data['bookings'] = bookings;
+    if (additionalImages != null) data['additional_images'] = additionalImages;
 
-  static List<List<String>> _parseNestedStringList(dynamic list) {
-    if (list == null) return [];
-    if (list is List) {
-      return list.map((item) {
-        if (item is List) {
-          return item.map((subItem) => subItem.toString()).toList();
-        }
-        return <String>[];
-      }).toList();
-    }
-    return [];
+    return data;
   }
 }

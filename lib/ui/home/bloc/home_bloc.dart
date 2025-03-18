@@ -5,7 +5,6 @@ import 'package:jre_app/base/bloc/base_bloc.dart';
 import '../../../data/lib/base/error_response.dart';
 import '../../../domain/model/home/Real_estate_ourReco_model.dart';
 import '../../../domain/model/home/details.dart' show DetailsProperty;
-import '../../../domain/model/home/filter_request.dart';
 import '../../../domain/model/home/proparty_model.dart';
 import '../../../domain/repositry/home/repositry_random.dart';
 import 'home_event.dart';
@@ -19,13 +18,10 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
     on<FeaturedLoaded>(_onFetchFeaturedList);
     on<CategoryDetailsLoaded>(_onFetchCategoryList);
     on<RealEstateRandomLoaded>(_onFetchRandomProperties);
-    on<PropertyDetailsLoaded>(_onDetailsList);
-    on<FilterResult>(_onFilterSearch);
     // on<FetchUserLocation>(_onFetchUserLocation); on<HomeEvent>((event, emit) {
     //   // TODO: implement event handler
     // });
   }
-
 
   Future<void> _loadHomeDataEvent(LoadHomeDataEvent event,
       Emitter<HomeState> emit) async {
@@ -51,14 +47,16 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
 
   Future<void> _onFetchCategoryList(CategoryDetailsLoaded event,
       Emitter<HomeState> emit) async {
-    emit.call(state.copyWith(status: HomeStatus.loading,));
+    emit.call(state.copyWith(status: HomeStatus.loadingCategory,isLoading: true));
     final Either<ErrorResponse, PropertyCategoryResponse> result =
     await repository.getCategoryDetails(id: event.id);
     result.fold((error) {
       emit.call(state.copyWith(
-          status: HomeStatus.error, errorMessage: error.message));
+          status: HomeStatus.error, errorMessage: error.message,isLoading:false));
     }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccessCategoryDeatils,categoryProperties: data.data));
+      emit.call(state.copyWith(status: HomeStatus.loadingCategory,isLoading: true));
+      emit.call(state.copyWith(status:
+      HomeStatus.apiSuccessCategoryDeatils,categoryProperties: data.data,isLoading: false));
     });
   }
   Future<void> _onFetchFeaturedList(FeaturedLoaded event,
@@ -74,19 +72,6 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
     });
   }
 
-  Future<void> _onDetailsList(PropertyDetailsLoaded event,
-      Emitter<HomeState> emit) async {
-    emit.call(state.copyWith(status: HomeStatus.loading,));
-    final Either<ErrorResponse, DetailsProperty> result =
-    await repository.getDetails(id: event.id);
-    result.fold((error) {
-      emit.call(state.copyWith(
-          status: HomeStatus.error, errorMessage: error.message));
-    }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.apiSuccessDetails,
-          detailsProperties: data));
-    });
-  }
   // facility: [
   // FacilityModel(title: "WiFi", img: "assets/images/images/wifi.png"),
   // FacilityModel(title: "Pool", img: "assets/images/images/pool.png"),
@@ -96,18 +81,5 @@ class HomeBloc extends BaseBloc<HomeEvent, HomeState> {
   // FacilityModel(title: "Kitchen", img: "assets/images/images/kitchen.png"),
   // ],
 
-  Future<void> _onFilterSearch(FilterResult event,
-      Emitter<HomeState> emit) async {
-    final filterRequest = RealEstateFilterRequest();
-    emit.call(state.copyWith(status: HomeStatus.loading,));
-    final Either<ErrorResponse, PropertyCategoryResponse> result =
-    await repository.getFilter(request: filterRequest);
-    result.fold((error) {
-      emit.call(state.copyWith(
-          status: HomeStatus.error, errorMessage: error.message));
-    }, (data) {
-      emit.call(state.copyWith(status: HomeStatus.SearchSuccsess,filteredProperties: data.data));
-    });
-  }
 }
 
