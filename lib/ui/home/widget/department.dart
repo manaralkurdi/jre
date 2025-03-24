@@ -36,11 +36,10 @@ class _PropertyFilterState extends State<PropertyFilter> {
       {'name': 'Chalet', 'icon': Icons.home, 'id': 1},
     ];
 
-    return BlocBuilder<HomeBloc, HomeState>(
+    return BlocConsumer<HomeBloc, HomeState>(
+      listener: (context, state) {
+      },
       builder: (context, state) {
-        if(state.status == HomeStatus.loadingCategory) {
-          return const PropertyCardShimmer(isHorizontal: false);
-        }
         return SizedBox(
           height: 40.h,
           child: ListView.builder(
@@ -52,13 +51,12 @@ class _PropertyFilterState extends State<PropertyFilter> {
 
               return GestureDetector(
                 onTap: () {
-                  setState(() {
                     context.read<HomeBloc>().add(
                       CategoryDetailsLoaded(id: filter['id']),
                     );
                     // Pass both the filter name and the filter data to the callback
                     widget.onFilterSelected(filter['name'], filter,state);
-                  });
+
                   // Request category details with the filter ID
 
                 },

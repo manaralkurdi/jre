@@ -26,7 +26,7 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
   final RealEstateFilterRequest _filterRequest = RealEstateFilterRequest();
 
   final Map<String, Map<String, int>> _countryAreaIds = {
-    'jordan': {
+    'Jordan,Amman': {
       'Abdoun': 1,
       'Sweifieh': 2,
       'Deir Ghbar': 3,
@@ -36,18 +36,18 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
       'Jabal Al-Lweibdeh': 7,
       'Umm Uthaina': 8,
     },
-    'egypt': {
+    'Egypt,Cairo': {
       'shekh_zayd': 9,
     },
   };
 
   final Map<String, int> _countryIds = {
-    'jordan': 1,
-    'egypt': 2,
+    'Jordan,Amman': 1,
+    'Egypt,Cairo': 2,
   };
 
   final Map<String, List<String>> _countryAreas = {
-    'jordan': [
+    'Jordan,Amman': [
       'Abdoun',
       'Sweifieh',
       'Deir Ghbar',
@@ -57,7 +57,7 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
       'Jabal Al-Lweibdeh',
       'Umm Uthaina'
     ],
-    'egypt': [
+    'Egypt,Cairo': [
       'shekh_zayd',
     ],
   };

@@ -16,7 +16,6 @@ import '../../Details/bloc/details_bloc.dart';
 import '../../Details/bloc/details_event.dart';
 import '../../Details/bloc/details_state.dart';
 import '../../home/bloc/home_event.dart';
-import '../bloc/category_event.dart';
 
 class PropertyViewScreen extends StatefulWidget {
   final int propertyId;

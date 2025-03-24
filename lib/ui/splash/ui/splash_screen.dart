@@ -4,6 +4,7 @@ import 'package:jre_app/theme/bloc/theme_bloc/theme_bloc.dart';
 import 'package:flutter/material.dart';
 
 import '../../../not_fond_screen.dart';
+import '../../../routes/app_route_name.dart';
 
 class SplashScreen extends StatefulWidget {
   SplashScreen({Key? key}) : super(key: key);
@@ -85,13 +86,11 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     // Start the animation
     _mainController.forward();
-    // Future.delayed(const Duration(seconds: 3), () {
-    //   if (mounted) {
-    //     Navigator.of(context).pushReplacement(
-    //       MaterialPageRoute(builder: (context) => const NotFoundScreen()),
-    //     );
-    //   }
-    // });
+    Future.delayed(const Duration(seconds: 7), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.BottoBarScreen);
+      }
+    });
   }
 
   void _generateHouses() {
@@ -172,17 +171,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Skyline image with fade-in
-                      FadeTransition(
-                        opacity: _skylineAnimation,
-                        child: Transform.translate(
-                          offset: Offset(5, (1 - _skylineAnimation.value) * -90),
-                          child: Image.asset(
-                            'assets/images/jre_flag.png', // Your skyline PNG with flags
-                            width: 400,
-                          ),
-                        ),
-                      ),
 
                       const SizedBox(height: 10),
 
@@ -195,7 +183,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                           }
                           // Fix: Ensure text opacity doesn't exceed 1.0
                           final textOpacity = _textAnimation.value.clamp(0.0, 1.0);
-
                           return Opacity(
                             opacity: textOpacity,
                             child: Transform.scale(
@@ -215,7 +202,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                   ).createShader(bounds);
                                 },
                                 child: Image.asset(
-                                  'assets/images/jre_text.png', // Your #JRE text PNG
+                                  'assets/images/app_logo.png', // Your #JRE text PNG
                                   width: 400,
                                 ),
                               ),

@@ -131,8 +131,13 @@ class CategoryList extends StatelessWidget {
             final appConfig = AppConfig();
             final baseUrl = await appConfig.imageUrl;
             return p.mainImage != null
-                ? '$baseUrl${p.mainImage}'
-                : '$baseUrl/default.jpg';
+                ? [
+              '$baseUrl${p.mainImage}',
+              '$baseUrl${p.mainImage}',
+              '$baseUrl${p.mainImage}',
+              '$baseUrl${p.mainImage}',
+            ]
+                : ['$baseUrl/default.jpg', '$baseUrl/default.jpg'];
           },
           propertyTypeExtractor: (p) => p.propertyType ?? '0',
           onTap: (p) => _navigateToDetails(context, p),

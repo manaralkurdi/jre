@@ -156,8 +156,13 @@ class _SearchPageState extends State<SearchPage> {
             final appConfig = AppConfig();
             final baseUrl = await appConfig.imageUrl;
             return p.mainImage != null
-                ? '$baseUrl${p.mainImage}'
-                : '$baseUrl/default.jpg';
+                ? [
+              '$baseUrl${p.mainImage}',
+              '$baseUrl${p.mainImage}',
+              '$baseUrl${p.mainImage}',
+              '$baseUrl${p.mainImage}',
+            ]
+                : ['$baseUrl/default.jpg', '$baseUrl/default.jpg'];
           },
           propertyTypeExtractor: (p) => p.propertyType,
           onTap: (p) => _navigateToDetails(p.id),

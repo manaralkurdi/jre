@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 /// A generic property card that can work with any property model
 /// by using a flexible approach with callbacks to extract data
-class DynamicPropertyCard<T> extends StatelessWidget {
+class DynamicPropertyCard<T> extends StatefulWidget {
   /// The property data object
   final T property;
 
@@ -19,16 +21,16 @@ class DynamicPropertyCard<T> extends StatelessWidget {
   final String Function(T property) locationExtractor;
 
   /// Callback to extract the number of beds from the property
-  final int Function(T property) bedsExtractor;
+  final dynamic Function(T property) bedsExtractor;
 
   /// Callback to extract the number of baths from the property
-  final int Function(T property) bathsExtractor;
+  final dynamic Function(T property) bathsExtractor;
 
   /// Callback to extract the number of kitchens from the property
-  final int Function(T property) kitchensExtractor;
+  final dynamic Function(T property) kitchensExtractor;
 
-  /// Callback to extract the image URL from the property
-  final Future<String> Function(T property) imageUrlExtractor;
+  /// Callback to extract list of image URLs from the property
+  final Future<List<String>> Function(T property) imageUrlExtractor;
 
   /// Optional callback for handling favorite toggle
   final Function(T property, bool isFavorite)? onFavoriteToggle;
@@ -60,11 +62,27 @@ class DynamicPropertyCard<T> extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<DynamicPropertyCard<T>> createState() => _DynamicPropertyCardState<T>();
+}
+
+class _DynamicPropertyCardState<T> extends State<DynamicPropertyCard<T>> {
+  int _currentImageIndex = 0;
+  final CarouselSliderController _carouselController = CarouselSliderController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Reset the current index when the widget initializes
+    _currentImageIndex = 0;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final imageHeight = 400.h;
 
     return GestureDetector(
-      onTap: onTap != null ? () => onTap!(property) : null,
+      onTap: widget.onTap != null ? () => widget.onTap!(widget.property) : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Container(
@@ -82,39 +100,116 @@ class DynamicPropertyCard<T> extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Property Image with Stack for favorite button and property type label
+              // Property Image Carousel with Stack for favorite button and property type label
               Stack(
                 children: [
-                  // Image
+                  // Image Carousel
                   ClipRRect(
                     borderRadius: BorderRadius.circular(30),
-                    child: FutureBuilder<String>(
-                      future: imageUrlExtractor(property),
+                    child: FutureBuilder<List<String>>(
+                      future: widget.imageUrlExtractor(widget.property),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.done &&
-                            snapshot.hasData) {
-                          return Image.network(
-                            snapshot.data!,
-                            height: 200,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 200,
-                                color: Colors.grey[300],
-                                child: const Center(
-                                  child: Icon(Icons.error, color: Colors.grey),
+                            snapshot.hasData &&
+                            snapshot.data!.isNotEmpty) {
+                          final images = snapshot.data!;
+                          return SizedBox(
+                            height: imageHeight,
+                            child: Stack(
+                              children: [
+                                // CarouselSlider for image carousel
+                                CarouselSlider.builder(
+                                  itemCount: images.length,
+                                  carouselController: _carouselController,
+                                  options: CarouselOptions(
+                                    height: imageHeight,
+                                    viewportFraction: 1.0,
+                                    initialPage: _currentImageIndex,
+                                    autoPlay: images.length > 1,
+                                    autoPlayInterval: const Duration(seconds: 4),
+                                    autoPlayAnimationDuration: const Duration(milliseconds: 800),
+                                    autoPlayCurve: Curves.fastOutSlowIn,
+                                    enableInfiniteScroll: images.length > 1,
+                                    scrollPhysics: const BouncingScrollPhysics(),
+                                    onPageChanged: (index, reason) {
+                                      if (mounted) {
+                                        setState(() {
+                                          _currentImageIndex = index;
+                                        });
+                                        print("Current index changed to: $index, reason: $reason");
+                                      }
+                                    },
+                                  ),
+                                  itemBuilder: (context, index, realIndex) {
+                                    return Image.network(
+                                      images[index],
+                                      width: double.infinity,
+                                      height: imageHeight,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          color: Colors.grey[300],
+                                          child: const Center(
+                                            child: Icon(Icons.error, color: Colors.grey),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
                                 ),
-                              );
-                            },
+
+                                // Custom indicator dots
+                                Positioned(
+                                  bottom: 15,
+                                  left: 0,
+                                  right: 0,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      images.length,
+                                          (index) => GestureDetector(
+                                        onTap: () {
+                                          _carouselController.animateToPage(
+                                            index,
+                                            duration: const Duration(milliseconds: 300),
+                                            curve: Curves.easeInOut,
+                                          );
+                                        },
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 300),
+                                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                                          height: 8,
+                                          width: _currentImageIndex == index ? 24 : 8,
+                                          decoration: BoxDecoration(
+                                            color: _currentImageIndex == index
+                                                ? const Color(0xff3D5BF6)
+                                                : Colors.white.withOpacity(0.5),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
-                        } else {
+                        } else if (snapshot.connectionState == ConnectionState.waiting) {
                           // Loading state
                           return Container(
-                            height: 200,
+                            height: imageHeight,
                             color: Colors.grey[200],
                             child: const Center(
                               child: CircularProgressIndicator(),
+                            ),
+                          );
+                        } else {
+                          // Error or no images
+                          return Container(
+                            height: imageHeight,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(Icons.image_not_supported, color: Colors.grey),
                             ),
                           );
                         }
@@ -123,14 +218,14 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                   ),
 
                   // Favorite button
-                  if (onFavoriteToggle != null && isFavoriteExtractor != null)
+                  if (widget.onFavoriteToggle != null && widget.isFavoriteExtractor != null)
                     Positioned(
                       top: 10,
                       right: 10,
                       child: GestureDetector(
                         onTap: () {
-                          final isFavorite = isFavoriteExtractor!(property);
-                          onFavoriteToggle!(property, !isFavorite);
+                          final isFavorite = widget.isFavoriteExtractor!(widget.property);
+                          widget.onFavoriteToggle!(widget.property, !isFavorite);
                         },
                         child: Container(
                           padding: const EdgeInsets.all(8),
@@ -146,10 +241,10 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                             ],
                           ),
                           child: Icon(
-                            isFavoriteExtractor!(property)
+                            widget.isFavoriteExtractor!(widget.property)
                                 ? Icons.favorite
                                 : Icons.favorite_border,
-                            color: isFavoriteExtractor!(property)
+                            color: widget.isFavoriteExtractor!(widget.property)
                                 ? Colors.red
                                 : Colors.grey,
                             size: 20,
@@ -159,36 +254,9 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                     ),
 
                   // Property type label
-                  // if (propertyTypeExtractor != null && propertyTypeExtractor!(property) != null)
-                  //   Positioned(
-                  //     top: 10,
-                  //     left: 10,
-                  //     child: Container(
-                  //       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  //       decoration: BoxDecoration(
-                  //         color: Color(0xff3D5BF6),
-                  //         borderRadius: BorderRadius.circular(30),
-                  //         boxShadow: [
-                  //           BoxShadow(
-                  //             color: Colors.black.withOpacity(0.1),
-                  //             blurRadius: 5,
-                  //             offset: const Offset(0, 2),
-                  //           ),
-                  //         ],
-                  //       ),
-                  //       child: Text(
-                  //         propertyTypeExtractor!(property)!,
-                  //         style: const TextStyle(
-                  //           color: Colors.white,
-                  //           fontSize: 12,
-                  //           fontWeight: FontWeight.bold,
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
+
                 ],
               ),
-
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -200,7 +268,7 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            titleExtractor(property),
+                            widget.titleExtractor(widget.property),
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -210,8 +278,8 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          priceExtractor(property),
-                          style: TextStyle(
+                          widget.priceExtractor(widget.property),
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Color(0xff3D5BF6),
@@ -225,7 +293,7 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                     // Location
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.location_on,
                           color: Colors.grey,
                           size: 18,
@@ -233,7 +301,7 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            '${locationCodeExtractor(property)}  ${locationExtractor(property)}',
+                            '${widget.locationCodeExtractor(widget.property)}  ${widget.locationExtractor(widget.property)}',
                             style: const TextStyle(
                               fontSize: 16,
                               color: Colors.grey,
@@ -253,7 +321,7 @@ class DynamicPropertyCard<T> extends StatelessWidget {
                         // Bed
                         _buildFeatureItem(
                           icon: Icons.bed,
-                          value: '${bedsExtractor(property)} Bed',
+                          value: '${widget.bedsExtractor(widget.property)} Bed',
                           iconColor: Colors.redAccent,
                         ),
 
@@ -261,8 +329,8 @@ class DynamicPropertyCard<T> extends StatelessWidget {
 
                         // Bath
                         _buildFeatureItem(
-                          icon: Icons.bathtub,
-                          value: '${bathsExtractor(property)} Bath',
+                          icon: Icons.person,
+                          value: '${widget.bathsExtractor(widget.property)} Person',
                           iconColor: Colors.redAccent,
                         ),
 
@@ -270,8 +338,8 @@ class DynamicPropertyCard<T> extends StatelessWidget {
 
                         // Kitchen
                         _buildFeatureItem(
-                          icon: Icons.kitchen,
-                          value: '${kitchensExtractor(property)} Kitchen',
+                          icon: Icons.workspaces,
+                          value: '${widget.kitchensExtractor(widget.property)} sqft',
                           iconColor: Colors.redAccent,
                         ),
                       ],

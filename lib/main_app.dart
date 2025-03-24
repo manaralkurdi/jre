@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
                      //     fontFamily: "Gilroy",
               ),
               onGenerateRoute: _appRouter.onGenerateRoute,
-              initialRoute: AppRoutes.CHANGE_LANGUAGE,
+              initialRoute: AppRoutes.SPLASH,
 
               supportedLocales: const [
                 Locale('en', 'US'),

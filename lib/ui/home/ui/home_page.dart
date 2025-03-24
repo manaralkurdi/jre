@@ -37,11 +37,42 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     context.read<HomeBloc>().add(LoadHomeDataEvent());
+    _loadNextPage();
+
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   _showSearchBottomSheet();
     // });
   }
 
+  final int _perPage = 10; // Items per page
+  int _currentPage = 0;
+  bool _isLoading = false;
+  bool _hasMore = true;
+
+  void _loadNextPage() {
+    if (_isLoading || !_hasMore) return;
+
+    setState(() => _isLoading = true);
+
+    // Simulating pagination from cached list
+    final startIndex = _currentPage * _perPage;
+    final endIndex = startIndex + _perPage;
+
+    if (startIndex >= _allProperties.length) {
+      _hasMore = false;
+    } else {
+      final newProperties = _allProperties.sublist(
+        startIndex,
+        endIndex > _allProperties.length ? _allProperties.length : endIndex,
+      );
+
+      setState(() {
+        _allProperties.addAll(newProperties);
+        _currentPage++;
+        _isLoading = false;
+      });
+    }
+  }
   void _showSearchBottomSheet() {
     final appConfig = AppConfig();
     final repository = RealEstateRepository(appConfig: appConfig);
@@ -58,6 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
     );
   }
+
+   List<Property> _allProperties = [];
 
   var currency = "\$";
 
@@ -352,13 +385,13 @@ class _HomeScreenState extends State<HomeScreen> {
   //   }
   // }
 
+
   void _onFilterSelected(String filterName, Map<String, dynamic> filterData,state) {
     setState(() {
       selectedFilter = filterName;
-      context.read<HomeBloc>().add(CategoryDetailsLoaded(id: filterData['id']),
-      );
-      // Use the filter data directly from the callback
       _navigateToFilteredPage(filterData,state);
+
+      // Use the filter data directly from the callback
     });
   }
 
@@ -555,6 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeContent(HomeState state) {
+    _allProperties=state.recommendedProperties;
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
@@ -596,7 +630,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Our recommendation section
           _buildRecommendationList(
               context,
-              state.recommendedProperties,
+              _allProperties,
               state.status == HomeStatus.loading
           ),
         ],
@@ -838,8 +872,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 2),
-                            Text(
-                              property.location ?? "",
+                            AppCustomText(
+                              titleText:
+                              property.location,
                               maxLines: 1,
                               style: const TextStyle(
                                 fontFamily: FontFamily.gilroyMedium,
@@ -875,8 +910,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   const SizedBox(width: 5),
                                   index == 0
-                                      ? const Text(
-                                    "3 Beds",
+                                      ? Text(
+                                    "${property.roomsCount ?? ''} Beds",
                                     style: TextStyle(
                                       fontFamily: FontFamily.gilroyMedium,
                                       color: Colors.white,
@@ -980,29 +1015,35 @@ class _HomeScreenState extends State<HomeScreen> {
       return const PropertyCardShimmer(isHorizontal: false);
     }
 
-    return ListView.builder(
-      primary: true,
+    return
+      ListView.builder(
+        primary: false,
       shrinkWrap: true,
-      itemCount: properties.length,
+        itemCount: properties.length + (_hasMore ? 1 : 0),
       physics: const NeverScrollableScrollPhysics(),
-      scrollDirection: Axis.vertical,
       itemBuilder: (context, index) {
+        if (index == properties.length) {
+          _loadNextPage(); // Trigger loading more items
+          return const Center(child: CircularProgressIndicator());
+        }
+
         final property = properties[index];
         return DynamicPropertyCard<Property>(
           property: property,
           titleExtractor: (p) => p.nameEn,
           priceExtractor: (p) => '\$${p.dailyPrice}',
-          locationCodeExtractor: (p) => p.location,
           locationExtractor: (p) => p.location,
-          bedsExtractor: (p) => 3,
-          bathsExtractor: (p) => 3,
-          kitchensExtractor: (p) => 2,
+          locationCodeExtractor: (p) => p.location,
+
+          bedsExtractor: (p) => p.roomsCount,
+          bathsExtractor: (p) => p.peopleCount,
+          kitchensExtractor: (p) => p.size,
           imageUrlExtractor: (p) async {
             final appConfig = AppConfig();
             final baseUrl = await appConfig.imageUrl;
             return p.mainImage != null
-                ? '$baseUrl${p.mainImage}'
-                : '$baseUrl/default.jpg';
+                ? ['$baseUrl${p.mainImage}','$baseUrl${p.mainImage}','$baseUrl${p.mainImage}','$baseUrl${p.mainImage}']
+                : ['$baseUrl/default.jpg'];
           },
           propertyTypeExtractor: (p) => p.propertyType,
           onTap: (p) => navigateToPropertyDetails(context, p.id),
@@ -1011,3 +1052,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+
+
